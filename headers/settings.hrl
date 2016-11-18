@@ -1,6 +1,9 @@
 -define(WORKER_PORT, 9876).
 -define(DISPLAY_PORT, 8765).
 
+-define(DEBUG, true).
+-define(DBG(Msg), (case ?DEBUG of true -> (io:fwrite(Msg)); _ -> (null) end)).
+
 -record(thread,{
   pid :: pid(),
   ref :: reference()

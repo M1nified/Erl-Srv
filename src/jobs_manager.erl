@@ -2,7 +2,7 @@
 -export([
   spawn/0
 ]).
--include("settings.hrl").
+-include("../headers/settings.hrl").
 
 spawn() ->
   spawn(fun wait_for_init_data/0).
@@ -29,6 +29,7 @@ jobs_manager_spawn(ReadyStorage) ->
     ref = Ref
   }.
 
+-spec jobs_manager(reference(),thread()) -> any().
 jobs_manager(ManRef,ReadyStorage) ->
   receive
     {result, Data} -> 
@@ -36,6 +37,8 @@ jobs_manager(ManRef,ReadyStorage) ->
     {job_request, Worker} ->
       ok;
     {went_offline, Worker} ->
+      ok;
+    {register_worker, Worker} ->
       ok
   end,
   jobs_manager(ManRef,ReadyStorage).

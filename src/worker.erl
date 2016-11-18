@@ -2,7 +2,7 @@
 -export([
   spawn/2
 ]).
--include("settings.hrl").
+-include("../headers/settings.hrl").
 
 -spec spawn(socket(),jobs_manager_settings()) -> thread().
 spawn(Socket,JobsManagerSettings) ->
