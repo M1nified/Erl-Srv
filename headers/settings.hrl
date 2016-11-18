@@ -1,6 +1,8 @@
 -define(WORKER_PORT, 9876).
 -define(DISPLAY_PORT, 8765).
 
+-define(MAX_FRAME_BUFFER, 1000).
+
 -define(DEBUG, true).
 -define(DBG(Msg), (case ?DEBUG of true -> (io:fwrite(Msg)); _ -> (null) end)).
 

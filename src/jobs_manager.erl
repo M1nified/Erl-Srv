@@ -5,7 +5,7 @@
 -include("../headers/settings.hrl").
 
 spawn() ->
-  spawn(fun wait_for_init_data/0).
+  spawn(fun() -> wait_for_init_data/0 end).
 
 wait_for_init_data() ->
   receive
@@ -46,7 +46,7 @@ jobs_manager(ManRef,ReadyStorage) ->
 -spec listen_go(jobs_manager_settings()) -> any().
 listen_go(Settings) ->
   case gen_tcp:listen(
-      settings:stt(?WORKER_PORT),
+      ?WORKER_PORT,
       [
         binary,
         {packet, 0},
@@ -88,3 +88,7 @@ register_the_worker() ->
   
 on_error({error,Where,Why}) ->
   {error,Where,Why}.
+
+
+%% LOCAL UNIT TESTS
+-include_lib("eunit/include/eunit.hrl").

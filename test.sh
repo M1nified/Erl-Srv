@@ -1,5 +1,5 @@
 #!/bin/bash  
-SUITES=`ls ebin | grep _suite`
+SUITES=`ls ebin`
 SUITES=${SUITES//.beam/}
 SUITES="${SUITES[*]}"
 SUITES_STR=""
