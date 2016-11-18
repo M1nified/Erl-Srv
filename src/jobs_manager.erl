@@ -15,7 +15,21 @@ wait_for_init_data() ->
 
 -spec start(thread()) -> any().
 start(ReadyStorage) ->
-  listen_go({ReadyStorage}).
+  JobsManager = jobs_manager_spawn(ReadyStorage),
+  listen_go(#jobs_manager_settings{
+    readystorage = ReadyStorage,
+    jobsmanager = JobsManager
+  }).
+
+-spec jobs_manager_spawn(thread()) -> thread().
+jobs_manager_spawn(ReadyStorage) ->
+  #thread{
+    pid = spawn(fun jobs_manager/0),
+    ref = make_ref()
+  }.
+
+jobs_manager() ->
+  ok.
 
 -spec listen_go(jobs_manager_settings()) -> any().
 listen_go(Settings) ->
@@ -69,6 +83,7 @@ worker_inbox_spawn(Parent,Socket,Settings) ->
   Ref = make_ref(), 
   PID = spawn(fun() -> worker_inbox({Socket,Parent,Ref}) end),
   #thread{pid = PID, ref = Ref}.
+
 -spec worker_inbox({socket(),thread(),reference()}) -> any().
 worker_inbox({Socket,Parent,InboxRef}) ->
   case gen_tcp:recv(Socket, 0) of
@@ -83,6 +98,7 @@ worker_chief_spawn(Parent,Socket,Settings) ->
   Ref = make_ref(),
   PID = spawn(fun() -> worker_chief({Socket,Parent,Ref}) end),
   #thread{pid = PID, ref = Ref}.
+  
 -spec worker_chief({socket(),thread(),reference()}) -> any().
 worker_chief({Socket,Parent,ChiefRef}) ->
   PRef = Parent#thread.ref,
@@ -100,7 +116,7 @@ worker_chief({Socket,Parent,ChiefRef}) ->
 register_the_worker() ->
   ok.
 
-
+%%
   
 on_error({error,Where,Why}) ->
   {error,Where,Why}.

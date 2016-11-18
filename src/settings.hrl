@@ -8,7 +8,8 @@
 -type thread() :: #thread{}.
 
 -record(jobs_manager_settings,{
-  readystorage :: thread()
+  readystorage :: thread(),
+  jobsmanager :: thread()
 }).
 -type jobs_manager_settings() :: #jobs_manager_settings{}.
 
