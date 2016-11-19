@@ -22,29 +22,30 @@ listen(Buffer) ->
   receive
     {Sender, Ref, kill} ->
       Sender ! {Ref, ok};
+    {Sender,Ref,put,{Key,Value}} ->
+      try maps:put(Key,Value,Buffer) of
+        Map -> 
+          Sender ! {Ref, ok},
+          listen(Map)
+      catch
+        _:Reason ->
+          Sender ! {Ref, error},
+          listen(Buffer)
+      end;
     {Sender,Ref,find,Key} ->
       Sender ! {Ref,maps:find(Key,Buffer)},
       listen(Buffer);
     {Sender,Ref,take,Key} ->
       try maps:take(Key,Buffer) of
         {Value, Map} ->
-          Sender ! {Ref, Value},
+          Sender ! {Ref, {ok, Value}},
           listen(Map);
         error ->
           Sender ! {Ref, error},
           listen(Buffer)
       catch
         _:Reason ->
-          Sender ! {Ref, error},
-          listen(Buffer)
-      end;
-    {Sender,Ref,put,{Key,Value}} ->
-      try maps:put(Key,Value,Buffer) of
-        Map -> 
-          listen(Map)
-      catch
-        _:Reason ->
-          Sender ! {Ref, error},
+          Sender ! {Ref, {error, Reason}},
           listen(Buffer)
       end;
     {Sender, Ref, get_buffer} ->
