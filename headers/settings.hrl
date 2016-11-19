@@ -18,4 +18,9 @@
 }).
 -type jobs_manager_settings() :: #jobs_manager_settings{}.
 
+-record(display_connector_settings,{
+  readystorage :: thread()
+}).
+-type display_connector_settings() :: #display_connector_settings{}.
+
 -type socket() :: gen_tcp:socket().

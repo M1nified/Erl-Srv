@@ -15,9 +15,9 @@ spawn() ->
 
 -spec run(reference()) -> any().
 run(MyRef) ->
-  listen(MyRef,#{ }).
+  listen(#{}).
 
--spec listen(reference(),map()) -> any().
+-spec listen(map()) -> any().
 listen(Buffer) ->
   receive
     {Sender,Ref,find,Key} ->
@@ -33,6 +33,18 @@ listen(Buffer) ->
           listen(Buffer)
       catch
         _:Reason ->
-          Sender ! {Ref, error}
-      end
+          Sender ! {Ref, error},
+          listen(Buffer)
+      end;
+    {Sender,Ref,put,{Key,Value}} ->
+      try maps:put(Key,Value,Buffer) of
+        Map -> 
+          listen(Map)
+      catch
+        _:Reason ->
+          Sender ! {Ref, error},
+          listen(Buffer)
+      end;
+    {Sender, Ref, kill} ->
+      Sender ! {Ref, ok}
   end.

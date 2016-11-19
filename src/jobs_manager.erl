@@ -5,7 +5,11 @@
 -include("../headers/settings.hrl").
 
 spawn() ->
-  spawn(fun() -> wait_for_init_data/0 end).
+  Pid = erlang:spawn(fun wait_for_init_data/0),
+  Me = #thread{
+    pid = Pid, ref = make_ref()
+  },
+  {ok, Me}.
 
 wait_for_init_data() ->
   receive

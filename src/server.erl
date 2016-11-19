@@ -13,7 +13,7 @@ run() ->
   end.
 
 run(ReStoThread) ->
-  case display_connector:spawn() of
+  case display_connector:spawn(ReStoThread) of
     {ok, DiCoThread} ->
       run(ReStoThread,DiCoThread);
     {error, Reason} ->
