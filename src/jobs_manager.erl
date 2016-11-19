@@ -51,32 +51,32 @@ jobs_manager(ManRef,ReadyStorage) ->
 listen_go(Settings) ->
   case gen_tcp:listen(
       ?WORKER_PORT,
-      [
-        binary,
-        {packet, 0},
-        {active, false},
-        {keepalive, true}
-      ]
+      ?WORKER_LISTEN_OPTIONS
     ) of
     {ok, ListenSock} -> listen_ok(ListenSock,Settings);
-    {error, Reason} -> on_error({error,listen_go,Reason})
+    {error, Reason} -> err:error({error,Reason},{?FILE,?LINE})
   end.
 
 -spec listen_ok(socket(),jobs_manager_settings()) -> any().
 listen_ok(ListenSock,Settings) ->
-  accept_spawn(ListenSock,Settings),
-  listen_go(Settings), % add exceptions
+  {ok, Port} = inet:port(ListenSock),
+  ?DBG(["Listening for workers on port: ", integer_to_list(Port),"\n"]),
+  accept_go(ListenSock,Settings),
+  % listen_go(Settings), % add exceptions
   gen_tcp:close(ListenSock).
 
--spec accept_spawn(socket(),jobs_manager_settings()) -> pid().
-accept_spawn(ListenSock,Settings) ->
-  spawn(fun() -> accept_go(ListenSock,Settings) end).
+% -spec accept_spawn(socket(),jobs_manager_settings()) -> pid().
+% accept_spawn(ListenSock,Settings) ->
+%   spawn(fun() -> accept_go(ListenSock,Settings) end).
 
 -spec accept_go(socket(),jobs_manager_settings()) -> any().
 accept_go(ListenSock,Settings) ->
+  ?DBG("Waiting for worker to accept...\n"),
   case gen_tcp:accept(ListenSock) of
-    {ok, Socket} -> accept_ok(Socket, Settings);
-    {error, Reason} -> on_error({error,accept_go,Reason})
+    {ok, Socket} -> 
+      accept_ok(Socket, Settings),
+      accept_go(ListenSock, Settings);
+    {error, Reason} -> err:error({error,Reason},{?FILE,?LINE})
   end.
 
 -spec accept_ok(socket(),jobs_manager_settings()) -> any().
@@ -87,12 +87,6 @@ accept_ok(Socket,Settings) ->
 
 register_the_worker() ->
   ok.
-
-%%
-  
-on_error({error,Where,Why}) ->
-  {error,Where,Why}.
-
 
 %% LOCAL UNIT TESTS
 -include_lib("eunit/include/eunit.hrl").

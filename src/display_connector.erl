@@ -24,22 +24,19 @@ run(ReStThread) ->
 listen_go(Settings) ->
   case gen_tcp:listen(
       ?DISPLAY_PORT,
-      [
-        binary,
-        {packet, 0},
-        {active, false},
-        {keepalive, true}
-      ]
+      ?DISPLAY_LISTEN_OPTIONS
     ) of
     {ok, ListenSocket} -> accept_go(ListenSocket,Settings);
-    {error, Reason} -> on_error({error, listen_go, Reason})
+    {error, Reason} -> err:error({error,Reason},{?FILE,?LINE})
   end.
 
 -spec accept_go(socket(),display_connector_settings()) -> any().
 accept_go(ListenSocket,Settings) ->
+  {ok, Port} = inet:port(ListenSocket),
+  ?DBG(["Listening for display on port: ", integer_to_list(Port),"\n"]),
   case gen_tcp:accept(ListenSocket) of
     {ok, Socket} -> accept_ok(Socket, Settings);
-    {error, Reason} -> on_error({error, listen_ok, Reason})
+    {error, Reason} -> err:error({error,Reason},{?FILE,?LINE})
   end.
 
 -spec accept_ok(socket(),display_connector_settings()) -> any().
@@ -54,13 +51,9 @@ listen(Socket,Settings) ->
       process_request(Settings,Data),
       listen(Socket,Settings);
     {error, Reason} ->
-      on_error({error, listen, Reason})
+      err:error({error,Reason},{?FILE,?LINE})
   end.
 
 -spec process_request(display_connector_settings(),any()) -> any().
 process_request(Settings,Data) ->
   ok.
-
-%%
-on_error({_,Where,Why}) ->
-  {error,Where,Why}.

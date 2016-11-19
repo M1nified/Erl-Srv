@@ -1,10 +1,25 @@
--define(WORKER_PORT, 9876).
--define(DISPLAY_PORT, 8765).
-
--define(MAX_FRAME_BUFFER, 1000).
-
 -define(DEBUG, true).
 -define(DBG(Msg), (case ?DEBUG of true -> (io:fwrite(Msg)); _ -> (null) end)).
+-define(DBGF(Str, Arr), case ?DEBUG of true -> (io:fwrite(lists:flatten(io_lib:format(Str,Arr)))); _ -> (null) end).
+-define(DBGOBJ(Array), (case ?DEBUG of true -> (io:fwrite(lists:flatten(io_lib:format("~p\n", Array)))); _ -> (null) end)).
+
+-define(WORKER_PORT, 5678).
+-define(DISPLAY_PORT, 8765).
+
+-define(WORKER_LISTEN_OPTIONS, [
+                                  binary,
+                                  {packet, 0},
+                                  {active, false},
+                                  {keepalive, true}
+                                ]).
+-define(DISPLAY_LISTEN_OPTIONS, [
+                                  binary,
+                                  {packet, 4},
+                                  {active, false},
+                                  {keepalive, true}
+                                ]).
+
+-define(MAX_FRAME_BUFFER, 1000).
 
 -record(thread,{
   pid :: pid(),
@@ -22,5 +37,13 @@
   readystorage :: thread()
 }).
 -type display_connector_settings() :: #display_connector_settings{}.
+
+-record(worker,{
+  head :: thread(),
+  inbox :: thread(),
+  outbox :: thread(),
+  socket :: socket()
+}).
+-type worker() :: #worker{}.
 
 -type socket() :: gen_tcp:socket().

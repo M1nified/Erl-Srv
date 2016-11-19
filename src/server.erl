@@ -5,6 +5,7 @@
 -include("../headers/settings.hrl").
 
 run() ->
+  ?DBG("run/0\n"),
   case ready_storage:spawn() of
     {ok, ReStoThread} ->
       run(ReStoThread);
@@ -13,6 +14,7 @@ run() ->
   end.
 
 run(ReStoThread) ->
+  ?DBG("run/1\n"),
   case display_connector:spawn(ReStoThread) of
     {ok, DiCoThread} ->
       run(ReStoThread,DiCoThread);
@@ -21,6 +23,7 @@ run(ReStoThread) ->
   end.
 
 run(ReStoThread,DiCoThread) ->
+  ?DBG("run/2\n"),
   case jobs_manager:spawn() of
     {ok, JoMaThread} ->
       run(ReStoThread,DiCoThread,JoMaThread);
@@ -29,10 +32,12 @@ run(ReStoThread,DiCoThread) ->
   end.
 
 run(ReStoThread,DiCoThread,JoMaThread) ->
+  ?DBG("run/3\n"),
   JoMaThread#thread.pid ! {ok, ReStoThread},
   spawn(fun() -> server_connector(ReStoThread,DiCoThread,JoMaThread) end).
 
 server_connector(ReStoThread,DiCoThread,JoMaThread) ->
+  ?DBG("server_connector\n"),
   receive
     {kill} ->
       ?DBG("GOING FOR THE KILL...");
