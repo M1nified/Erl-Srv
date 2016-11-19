@@ -75,3 +75,16 @@ get_buffer__ok_1_test() ->
   receive
     {Tid, #{}} -> ok
   end.
+
+get_buffer__ok_2_test() ->
+  {ok, Rst} = ready_storage:spawn(),
+  Tid = make_ref(),
+  Rst#thread.pid ! {self(),Tid,put,{key,[1,1,1]}},
+  receive
+    {Tid, ok} -> ok
+  end,
+  Tid2 = make_ref(),
+  Rst#thread.pid ! {self(),Tid2,get_buffer},
+  receive
+    {Tid2, #{key := [1,1,1]}} -> ok
+  end.
