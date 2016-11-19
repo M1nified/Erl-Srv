@@ -4,7 +4,7 @@
 ]).
 -include("../headers/settings.hrl").
 
--spec spawn() -> thread().
+-spec spawn() -> {ok,thread()}.
 spawn() ->
   MyRef = make_ref(),
   Pid = spawn(fun() -> run(MyRef) end),
@@ -20,6 +20,8 @@ run(MyRef) ->
 -spec listen(map()) -> any().
 listen(Buffer) ->
   receive
+    {Sender, Ref, kill} ->
+      Sender ! {Ref, ok};
     {Sender,Ref,find,Key} ->
       Sender ! {Ref,maps:find(Key,Buffer)},
       listen(Buffer);
@@ -45,6 +47,7 @@ listen(Buffer) ->
           Sender ! {Ref, error},
           listen(Buffer)
       end;
-    {Sender, Ref, kill} ->
-      Sender ! {Ref, ok}
+    {Sender, Ref, get_buffer} ->
+      Sender ! {Ref, Buffer},
+      listen(Buffer)
   end.
