@@ -1,4 +1,4 @@
--define(WORKER_PORT, 9876).
+-define(WORKER_PORT, 3456).
 -define(DISPLAY_PORT, 8765).
 
 -define(MAX_FRAME_BUFFER, 1000).
