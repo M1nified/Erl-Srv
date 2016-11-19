@@ -29,7 +29,7 @@ listen(Buffer) ->
           listen(Map)
       catch
         _:Reason ->
-          Sender ! {Ref, error},
+          Sender ! {Ref, {error, Reason}},
           listen(Buffer)
       end;
     {Sender,Ref,find,Key} ->
