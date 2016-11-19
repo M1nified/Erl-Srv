@@ -44,6 +44,27 @@ find__ok_2_test() ->
     {Tid2, {ok,[1,1,1]}} -> ok
   end.
 
+get_buffer__ok_1_test() ->
+  {ok, Rst} = ready_storage:spawn(),
+  Tid = make_ref(),
+  Rst#thread.pid ! {self(),Tid,get_buffer},
+  receive
+    {Tid, #{}} -> ok
+  end.
+
+get_buffer__ok_2_test() ->
+  {ok, Rst} = ready_storage:spawn(),
+  Tid = make_ref(),
+  Rst#thread.pid ! {self(),Tid,put,{key,[1,1,1]}},
+  receive
+    {Tid, ok} -> ok
+  end,
+  Tid2 = make_ref(),
+  Rst#thread.pid ! {self(),Tid2,get_buffer},
+  receive
+    {Tid2, #{key := [1,1,1]}} -> ok
+  end.
+
 take__fail_1_test() ->
   {ok, Rst} = ready_storage:spawn(),
   Tid = make_ref(),
@@ -66,25 +87,9 @@ take__ok_2_test() ->
     {Tid2, {ok, [1,1,1]}} -> ok;
     {Tid2, error} -> ct:fail(2);
     {Tid2, {error, Reason}} -> ct:fail({3,Reason})
-  end.
-
-get_buffer__ok_1_test() ->
-  {ok, Rst} = ready_storage:spawn(),
-  Tid = make_ref(),
-  Rst#thread.pid ! {self(),Tid,get_buffer},
-  receive
-    {Tid, #{}} -> ok
-  end.
-
-get_buffer__ok_2_test() ->
-  {ok, Rst} = ready_storage:spawn(),
-  Tid = make_ref(),
-  Rst#thread.pid ! {self(),Tid,put,{key,[1,1,1]}},
-  receive
-    {Tid, ok} -> ok
   end,
-  Tid2 = make_ref(),
-  Rst#thread.pid ! {self(),Tid2,get_buffer},
+  Tid3 = make_ref(),
+  Rst#thread.pid ! {self(),Tid3,get_buffer},
   receive
-    {Tid2, #{key := [1,1,1]}} -> ok
+    {Tid3, #{}} -> ok
   end.
