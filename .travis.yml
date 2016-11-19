@@ -17,7 +17,7 @@ matrix:
     - os: osx
   include:
     - os: osx
-      before_script:
+      before_install:
         - brew update
 before_script:
   - "erl -make"
