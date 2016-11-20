@@ -1,4 +1,4 @@
--module(ready_storage).
+-module(collector).
 -export([
   spawn/0
 ]).

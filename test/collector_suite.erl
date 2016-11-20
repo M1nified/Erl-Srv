@@ -1,12 +1,12 @@
--module(ready_storage_suite).
+-module(collector_suite).
 -include_lib("eunit/include/eunit.hrl").
 -include("../headers/settings.hrl").
 
 spawn__1_test() ->
-  {ok, ReadyStorageThread} = ready_storage:spawn().
+  {ok, ReadyStorageThread} = collector:spawn().
 
 kill__1_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(), 
   Rst#thread.pid ! {self(),Tid,kill},
   receive
@@ -15,7 +15,7 @@ kill__1_test() ->
   undefined = process_info(Rst#thread.pid).
 
 put__1_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(),
   Rst#thread.pid ! {self(),Tid,put,{10,[1,1,1]}},
   receive
@@ -24,7 +24,7 @@ put__1_test() ->
   end.
 
 find__fail_1_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(),
   Rst#thread.pid ! {self(),Tid,find,key},
   receive
@@ -32,7 +32,7 @@ find__fail_1_test() ->
   end.
 
 find__ok_2_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(),
   Rst#thread.pid ! {self(),Tid,put,{key,[1,1,1]}},
   receive
@@ -45,7 +45,7 @@ find__ok_2_test() ->
   end.
 
 get_buffer__ok_1_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(),
   Rst#thread.pid ! {self(),Tid,get_buffer},
   receive
@@ -53,7 +53,7 @@ get_buffer__ok_1_test() ->
   end.
 
 get_buffer__ok_2_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(),
   Rst#thread.pid ! {self(),Tid,put,{key,[1,1,1]}},
   receive
@@ -66,7 +66,7 @@ get_buffer__ok_2_test() ->
   end.
 
 take__fail_1_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(),
   Rst#thread.pid ! {self(),Tid,take,key},
   receive
@@ -75,7 +75,7 @@ take__fail_1_test() ->
   end.
 
 take__ok_2_test() ->
-  {ok, Rst} = ready_storage:spawn(),
+  {ok, Rst} = collector:spawn(),
   Tid = make_ref(),
   Rst#thread.pid ! {self(),Tid,put,{key,[1,1,1]}},
   receive

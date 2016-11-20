@@ -33,10 +33,12 @@
 }).
 -type jobs_manager_settings() :: #jobs_manager_settings{}.
 
--record(display_connector_settings,{
-  readystorage :: thread()
+-record(display_connector,{
+  readystorage :: thread(),
+  connector :: thread(),
+  socket :: socket()
 }).
--type display_connector_settings() :: #display_connector_settings{}.
+-type display_connector() :: #display_connector{}.
 
 -record(worker,{
   head :: thread(),
