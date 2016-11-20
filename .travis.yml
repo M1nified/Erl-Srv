@@ -1,9 +1,13 @@
 language: erlang
 os:
   - linux
-  - osx
-osx_image:
-  - xcode8.1	
+  # - osx
+# osx_image:
+#   - xcode8.1	
+# matrix:
+#   allow_failures:
+#     - os: osx
+
 otp_release:
   - 19.1
   - 19.0
@@ -13,9 +17,6 @@ otp_release:
   # - 17.0
   # - R16B03
 
-matrix:
-  allow_failures:
-    - os: osx
 
 before_script:
   - "erl -make"
