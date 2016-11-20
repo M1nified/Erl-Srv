@@ -6,7 +6,7 @@
 
 run() ->
   ?DBG("run/0\n"),
-  case ready_storage:spawn() of
+  case collector:spawn() of
     {ok, ReStoThread} ->
       run(ReStoThread);
     {error, Reason} ->
