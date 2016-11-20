@@ -10,4 +10,4 @@
 
 - `test.sh` / `test.bat` runs tests
 - `server_run.bat` starts whole server_run
-- `make_run.bat` compiles and runs `server_run`
+- `make_run.bat` compiles and executes `server_run`
