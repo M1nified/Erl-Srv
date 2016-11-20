@@ -42,7 +42,8 @@
   head :: thread(),
   inbox :: thread(),
   outbox :: thread(),
-  socket :: socket()
+  socket :: socket(),
+  collector :: thread()
 }).
 -type worker() :: #worker{}.
 

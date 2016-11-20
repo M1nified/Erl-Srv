@@ -4,30 +4,32 @@
 ]).
 -include("../headers/settings.hrl").
 
--spec spawn(socket(),jobs_manager_settings()) -> thread().
+-spec spawn(socket(),jobs_manager_settings()) -> thread() | error.
 spawn(Socket,JobsManagerSettings) ->
   % WorkerBoss = #thread{pid = self(),ref = make_ref()},
   InboxThread = inbox_spawn(),
   OutboxThread = outbox_spawn(),
   TheWorkerRef = make_ref(),
   TheWorkerPid = spawn(fun() -> run(TheWorkerRef,JobsManagerSettings,InboxThread,OutboxThread, Socket) end),
-
-
-
-  #thread{
-    pid = TheWorkerPid,
-    ref = TheWorkerRef
-  }.
+  Ref = make_ref(),
+  TheWorkerPid ! {self(),Ref,getworker},
+  receive
+    {Ref,{worker,Worker}} ->
+      Worker;
+    _ ->
+      error
+  end.
 
 -spec run(reference(),jobs_manager_settings(),thread(),thread(),socket()) -> any().
 run(TheWorkerRef,JobsManagerSettings,InboxThread,OutboxThread, Socket) ->
-  ?DBGF("~p Worker spawned and running...\n", [TheWorkerRef]),
   Worker = #worker{
     head = #thread{pid = self(), ref = TheWorkerRef},
     inbox = InboxThread,
     outbox = OutboxThread,
-    socket = Socket
+    socket = Socket,
+    collector = JobsManagerSettings#jobs_manager_settings.readystorage
   },
+  ?DBGF("~p Worker spawned and running...\n~p\n", [TheWorkerRef,Worker]),
   Worker#worker.inbox#thread.pid ! {worker, Worker},
   Worker#worker.outbox#thread.pid ! {worker, Worker},
   worker_loop(Worker),
@@ -41,13 +43,18 @@ worker_loop(Worker) ->
       ?DBGF("~p Received error from inbox: ~p\n",[Worker#worker.head#thread.ref, Reason]),
       worker_loop(Worker);
     {inbox,InboxRef, Data} ->
+      ?DBGF("~p Received from worker's inbox: ~p\n",[Worker#worker.head#thread.ref,Data]),
       receive_from_inbox(Worker,Data),
+      worker_loop(Worker);
+    {Sender, MsgRef, getworker} ->
+      Sender ! {MsgRef,{worker,Worker}},
       worker_loop(Worker)
   end.
 
--spec receive_from_inbox(worker(),any()) -> any().
+-spec receive_from_inbox(worker(),tuple()) -> any().
 receive_from_inbox(Worker,Data) ->
-  ?DBGF("~p Received from worker's inbox: ~p\n",[Worker#worker.head#thread.ref,Data]),
+  L = binary:bin_to_list(Data),
+  ?DBG([L,"\n"]),
   ok.
 
 -spec inbox_spawn() -> thread().
