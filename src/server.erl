@@ -34,14 +34,15 @@ run(ReStoThread,DiCoThread) ->
 run(ReStoThread,DiCoThread,JoMaThread) ->
   ?DBG("run/3\n"),
   JoMaThread#thread.pid ! {ok, ReStoThread},
-  spawn(fun() -> server_connector(ReStoThread,DiCoThread,JoMaThread) end).
+  LinkNode = link_node:spawn(),
+  spawn(fun() -> server_connector(LinkNode,ReStoThread,DiCoThread,JoMaThread) end).
 
-server_connector(ReStoThread,DiCoThread,JoMaThread) ->
+server_connector(LinkNode,ReStoThread,DiCoThread,JoMaThread) ->
   ?DBG("server_connector\n"),
   receive
     {kill} ->
       ?DBG("GOING FOR THE KILL...");
     {get,buffer} ->
       ?DBG("GETTING BUFFER..."),
-      server_connector(ReStoThread,DiCoThread,JoMaThread)
+      server_connector(LinkNode,ReStoThread,DiCoThread,JoMaThread)
   end.
