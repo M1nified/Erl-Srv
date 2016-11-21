@@ -7,42 +7,48 @@
 run() ->
   ?DBG("run/0\n"),
   case collector:spawn() of
-    {ok, ReStoThread} ->
-      run(ReStoThread);
+    {ok, CollectorThr} ->
+      run(CollectorThr);
     {error, Reason} ->
       {error, run_0, Reason}
   end.
 
-run(ReStoThread) ->
+run(CollectorThr) ->
   ?DBG("run/1\n"),
-  case display_connector:spawn(ReStoThread) of
+  case display_connector:spawn(CollectorThr) of
     {ok, DiCoThread} ->
-      run(ReStoThread,DiCoThread);
+      run(CollectorThr,DiCoThread);
     {error, Reason} ->
       {error, run_1, Reason}
   end.
 
-run(ReStoThread,DiCoThread) ->
+run(CollectorThr,DiCoThread) ->
   ?DBG("run/2\n"),
   case jobs_manager:spawn() of
-    {ok, JoMaThread} ->
-      run(ReStoThread,DiCoThread,JoMaThread);
+    {ok, JobsThread} ->
+      run(CollectorThr,DiCoThread,JobsThread);
     {error, Reason} ->
       {error, run_2, Reason}
   end.
 
-run(ReStoThread,DiCoThread,JoMaThread) ->
+run(CollectorThr,DiCoThread,JobsThread) ->
   ?DBG("run/3\n"),
-  JoMaThread#thread.pid ! {ok, ReStoThread},
+  JobsThread#thread.pid ! {ok, CollectorThr},
   LinkNode = link_node:spawn(),
-  spawn(fun() -> server_connector(LinkNode,ReStoThread,DiCoThread,JoMaThread) end).
+  RegCollectorThrRef = make_ref(),
+  RegDisplayThrRef = make_ref(),
+  RegJobsThrRef = make_ref(),
+  LinkNode ! {self(),RegCollectorThrRef,reg,collector,CollectorThr#thread.pid},
+  LinkNode ! {self(),RegDisplayThrRef,reg,display,DiCoThread#thread.pid},
+  LinkNode ! {self(),RegJobsThrRef,reg,jobs,JobsThread#thread.pid},
+  spawn(fun() -> server_connector(LinkNode) end).
 
-server_connector(LinkNode,ReStoThread,DiCoThread,JoMaThread) ->
+server_connector(LinkNode) ->
   ?DBG("server_connector\n"),
   receive
     {kill} ->
       ?DBG("GOING FOR THE KILL...");
     {get,buffer} ->
       ?DBG("GETTING BUFFER..."),
-      server_connector(LinkNode,ReStoThread,DiCoThread,JoMaThread)
+      server_connector(LinkNode)
   end.
