@@ -15,14 +15,19 @@ run(Vassals) ->
       recv(Vassals,Any)
   end.
 
+-spec recv(map(),tuple()) -> any().
 recv(Vassals,{From,Ref,reg,all,_}) ->
-  From ! {Ref,error,reserved_name_all},
+  spawn(fun() -> From ! {Ref,error,reserved_name_all} end),
   run(Vassals);
 recv(Vassals,{From,Ref,reg,Name,Pid}) ->
   NewVassals = maps:put(Name,Pid,Vassals),
-  From ! {Ref,ok},
+  spawn(fun() -> From ! {Ref,ok} end),
   run(NewVassals);
+recv(Vassals,{From,Ref,get_vassals}) ->
+  spawn(fun() -> From ! {Ref, Vassals} end),
+  run(Vassals);
 recv(Vassals,{From,Ref,forward,Message,ToWhom}) ->
+  ?DBGF("recv: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
   case forward(Vassals,{From,Ref,Message,ToWhom}) of
     ok -> 
       ok;
@@ -33,17 +38,19 @@ recv(Vassals,{From,Ref,forward,Message,ToWhom}) ->
   end,
   run(Vassals).
 
+-spec forward(map(),tuple()) -> ok | {error, any()} | {warning, any()}.
 forward(_,{From,Ref,Message,ToWhom}) when is_pid(ToWhom) ->
   spawn(fun() -> ToWhom ! {From,Ref,Message} end),
   ok;
 forward(Vassals,{From,Ref,Message,ToWhom}) when is_atom(ToWhom) ->
+  ?DBGF("forward is atom: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
   try maps:get(ToWhom,Vassals) of
     ToPid ->
       forward(Vassals,{From,Ref,Message,ToPid}),
       ok
   catch
-    _:_ ->
-      {error, no_match_for_given_atom}
+    _:Reason ->
+      {error, {no_match_for_given_atom,Reason}}
   end;
 forward(Vassals,{From,Ref,Message,ToWhom}) when is_list(ToWhom) ->
   Results = lists:map(fun(TH) -> forward(Vassals,{From,Ref,Message,TH}) end, ToWhom),
@@ -90,7 +97,7 @@ recv_should_send_back_error_if_no_match__test() ->
   Me = self(),
   spawn(fun() -> recv(#{me=>Me},{Me,Ref,forward,{test,message,to},not_me}) end),
   receive
-    {Ref,error,no_match_for_given_atom} -> ok;
+    {Ref,error,{no_match_for_given_atom,{badkey,not_me}}} -> ok;
     _ -> ct:fail()
   end.
 
@@ -117,8 +124,14 @@ recv_should_send_back_warning_if_no_match_present__test() ->
   Node2 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok2,Message}} end end),
   spawn(fun() -> recv(#{node2=>Node2},{Me,RefMe,forward,message,[node2,node3]}) end),
   receive
+    {RefMe,{ok2,message}} -> ok;
     {RefMe,warning,_} -> ok; 
-    _ -> ct:fail(1)
+    Any1 -> ct:fail({1,Any1})
+  end,
+  receive
+    {RefMe,{ok2,message}} -> ok;
+    {RefMe,warning,_} -> ok; 
+    Any2 -> ct:fail({2,Any2})
   end.
 
 
