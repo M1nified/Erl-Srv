@@ -87,6 +87,23 @@ should_pass_message_to_multiple_proccs_test() ->
     {MeRef,{ok3,info_to_pass}} -> ok
   end.
 
+  
+should_pass_message_to_all_registered_procs_test() ->
+  LN = link_node:spawn(),
+  Me = self(),
+  MeRef = make_ref(),
+  Node2 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok2,Message}} end end),
+  Node3 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok3,Message}} end end),
+  LN ! {Me,0,reg,node2,Node2},
+  LN ! {Me,0,reg,node3,Node3},
+  LN ! {Me,MeRef,forward,info_to_pass,to_all},
+  receive
+    {MeRef,{ok2,info_to_pass}} -> ok
+  end,
+  receive
+    {MeRef,{ok3,info_to_pass}} -> ok
+  end.
+
 % HELPERS
 
 forward(LinkNode,Ref,ToWhom,Message) ->

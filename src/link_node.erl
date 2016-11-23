@@ -27,7 +27,7 @@ recv(Vassals,{From,Ref,get_vassals}) ->
   spawn(fun() -> From ! {Ref, Vassals} end),
   run(Vassals);
 recv(Vassals,{From,Ref,forward,Message,to_all}) ->
-  recv(Vassals,{From,Ref,forward,Message,maps:tolist(Vassals)});
+  recv(Vassals,{From,Ref,forward,Message,maps:values(Vassals)});
 recv(Vassals,{From,Ref,forward,Message,ToWhom}) ->
   ?DBGF("recv: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
   case forward(Vassals,{From,Ref,Message,ToWhom}) of
