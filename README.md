@@ -1,6 +1,6 @@
-# Erl-Srv
+# Erlang-Srv
 
-[![Build Status](https://travis-ci.org/M1nified/Erl-Srv.svg?branch=master)](https://travis-ci.org/M1nified/Erl-Srv)
+[![Build Status](https://travis-ci.org/M1nified/Erlang-Srv.svg?branch=master)](https://travis-ci.org/M1nified/Erlang-Srv)
 
 ## Requirements
 
