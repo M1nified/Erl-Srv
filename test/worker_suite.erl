@@ -4,7 +4,6 @@
 
 jms_1() ->
   #jobs_manager_settings{
-    readystorage = null,
     jobsmanager = null
   }.
 

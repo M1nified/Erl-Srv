@@ -50,5 +50,7 @@ listen(Buffer) ->
       end;
     {Sender, Ref, get_buffer} ->
       Sender ! {Ref, Buffer},
+      listen(Buffer);
+    _ ->
       listen(Buffer)
   end.

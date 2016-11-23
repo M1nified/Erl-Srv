@@ -6,6 +6,8 @@
 -define(WORKER_PORT, 5678).
 -define(DISPLAY_PORT, 8765).
 
+-define(SERVER_ADDR, "localhost").
+
 -define(WORKER_LISTEN_OPTIONS, [
                                   binary,
                                   {packet, 0},
@@ -18,6 +20,10 @@
                                   {active, false},
                                   {keepalive, true}
                                 ]).
+-define(WORKER_TERMINAL_OPTIONS,[
+                                  binary,
+                                  {packet, 0}
+                                ]).
 
 -define(MAX_FRAME_BUFFER, 1000).
 
@@ -28,13 +34,11 @@
 -type thread() :: #thread{}.
 
 -record(jobs_manager_settings,{
-  readystorage :: thread(),
   jobsmanager :: thread()
 }).
 -type jobs_manager_settings() :: #jobs_manager_settings{}.
 
 -record(display_connector,{
-  readystorage :: thread(),
   connector :: thread(),
   socket :: socket()
 }).
@@ -44,8 +48,7 @@
   head :: thread(),
   inbox :: thread(),
   outbox :: thread(),
-  socket :: socket(),
-  collector :: thread()
+  socket :: socket()
 }).
 -type worker() :: #worker{}.
 

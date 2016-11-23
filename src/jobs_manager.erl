@@ -14,38 +14,37 @@ spawn() ->
 wait_for_init_data() ->
   receive
     {error} -> ok;
-    {ok, ReadyStorage} -> start(ReadyStorage)
+    {_,_,ready} -> start()
   end.
 
--spec start(thread()) -> any().
-start(ReadyStorage) ->
-  JobsManager = jobs_manager_spawn(ReadyStorage),
+-spec start() -> any().
+start() ->
+  JobsManager = jobs_manager_spawn(),
   listen_go(#jobs_manager_settings{
-    readystorage = ReadyStorage,
     jobsmanager = JobsManager
   }).
 
--spec jobs_manager_spawn(thread()) -> thread().
-jobs_manager_spawn(ReadyStorage) ->
+-spec jobs_manager_spawn() -> thread().
+jobs_manager_spawn() ->
   Ref = make_ref(),
   #thread{
-    pid = spawn(fun() -> jobs_manager(Ref,ReadyStorage) end),
+    pid = spawn(fun() -> jobs_manager(Ref) end),
     ref = Ref
   }.
 
--spec jobs_manager(reference(),thread()) -> any().
-jobs_manager(ManRef,ReadyStorage) ->
+-spec jobs_manager(thread()) -> any().
+jobs_manager(ManRef) ->
   receive
-    {result, Data} -> 
+    {From,Ref,result, Data} -> 
       ok;
-    {job_request, Worker} ->
+    {From,Ref,job_request, Worker} ->
       ok;
-    {went_offline, Worker} ->
+    {From,Ref,went_offline, Worker} ->
       ok;
-    {register_worker, Worker} ->
+    {From,Ref,register_worker, Worker} ->
       ok
   end,
-  jobs_manager(ManRef,ReadyStorage).
+  jobs_manager(ManRef).
 
 -spec listen_go(jobs_manager_settings()) -> any().
 listen_go(Settings) ->

@@ -1,25 +1,29 @@
 -module(display_connector).
 -export([
-  spawn/1
+  spawn/0
 ]).
 -include("../headers/settings.hrl").
 
--spec spawn(thread()) -> thread().
-spawn(ReStThread) ->
+-spec spawn() -> thread().
+spawn() ->
   MyRef = make_ref(),
-  Pid = erlang:spawn(fun() -> run(ReStThread,MyRef) end),
+  Pid = erlang:spawn(fun() -> run(MyRef) end),
   Me = #thread{
     pid = Pid, ref=MyRef
   },
   {ok, Me}.
 
--spec run(thread(),reference()) -> any().
-run(ReStThread,MyRef) ->
+-spec run(reference()) -> any().
+run(MyRef) ->
   DisplConn = #display_connector{
-    readystorage = ReStThread,
     connector = #thread{pid=self(),ref=MyRef}
   },
-  listen_go(DisplConn).
+  receive
+    {_,_,ready} ->
+      listen_go(DisplConn);
+    {error} ->
+      ok
+  end.
 
 -spec listen_go(display_connector()) -> any().
 listen_go(DisplConn) ->
@@ -56,5 +60,8 @@ listen(DisplConn) ->
   end.
 
 -spec process_request(display_connector(),any()) -> any().
-process_request(DisplConn,Data) ->
-  ok.
+process_request(_,{get_frames,Limit,Offset}) ->
+  Ref = make_ref(),
+  linknode ! {self(),Ref,forward,{get_frames,Limit,Offset},collector},
+  ok;
+process_request(_,_) -> ok.

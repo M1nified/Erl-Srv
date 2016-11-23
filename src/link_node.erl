@@ -29,7 +29,7 @@ recv(Vassals,{From,Ref,get_vassals}) ->
 recv(Vassals,{From,Ref,forward,Message,to_all}) ->
   recv(Vassals,{From,Ref,forward,Message,maps:values(Vassals)});
 recv(Vassals,{From,Ref,forward,Message,ToWhom}) ->
-  ?DBGF("recv: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
+  % ?DBGF("recv: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
   case forward(Vassals,{From,Ref,Message,ToWhom}) of
     ok -> 
       ok;
@@ -45,7 +45,7 @@ forward(_,{From,Ref,Message,ToWhom}) when is_pid(ToWhom) ->
   spawn(fun() -> ToWhom ! {From,Ref,Message} end),
   ok;
 forward(Vassals,{From,Ref,Message,ToWhom}) when is_atom(ToWhom) ->
-  ?DBGF("forward is atom: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
+  % ?DBGF("forward is atom: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
   try maps:get(ToWhom,Vassals) of
     ToPid ->
       forward(Vassals,{From,Ref,Message,ToPid}),

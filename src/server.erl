@@ -15,7 +15,7 @@ run() ->
 
 run(CollectorThr) ->
   ?DBG("run/1\n"),
-  case display_connector:spawn(CollectorThr) of
+  case display_connector:spawn() of
     {ok, DiCoThread} ->
       run(CollectorThr,DiCoThread);
     {error, Reason} ->
@@ -33,15 +33,16 @@ run(CollectorThr,DiCoThread) ->
 
 run(CollectorThr,DiCoThread,JobsThread) ->
   ?DBG("run/3\n"),
-  JobsThread#thread.pid ! {ok, CollectorThr},
   LinkNode = link_node:spawn(),
+  register(linknode,LinkNode),
   RegCollectorThrRef = make_ref(),
   RegDisplayThrRef = make_ref(),
   RegJobsThrRef = make_ref(),
-  LinkNode ! {self(),RegCollectorThrRef,reg,collector,CollectorThr#thread.pid},
-  LinkNode ! {self(),RegDisplayThrRef,reg,display,DiCoThread#thread.pid},
-  LinkNode ! {self(),RegJobsThrRef,reg,jobs,JobsThread#thread.pid},
-  spawn(fun() -> server_connector(LinkNode) end).
+  linknode ! {self(),RegCollectorThrRef,reg,collector,CollectorThr#thread.pid},
+  linknode ! {self(),RegDisplayThrRef,reg,display,DiCoThread#thread.pid},
+  linknode ! {self(),RegJobsThrRef,reg,jobs,JobsThread#thread.pid},
+  spawn(fun() -> server_connector(LinkNode) end),
+  linknode ! {self(),make_ref(),forward,ready,to_all}.
 
 server_connector(LinkNode) ->
   ?DBG("server_connector\n"),
