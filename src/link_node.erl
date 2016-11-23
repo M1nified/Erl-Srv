@@ -26,6 +26,8 @@ recv(Vassals,{From,Ref,reg,Name,Pid}) ->
 recv(Vassals,{From,Ref,get_vassals}) ->
   spawn(fun() -> From ! {Ref, Vassals} end),
   run(Vassals);
+recv(Vassals,{From,Ref,forward,Message,to_all}) ->
+  recv(Vassals,{From,Ref,forward,Message,maps:tolist(Vassals)});
 recv(Vassals,{From,Ref,forward,Message,ToWhom}) ->
   ?DBGF("recv: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
   case forward(Vassals,{From,Ref,Message,ToWhom}) of
@@ -53,7 +55,7 @@ forward(Vassals,{From,Ref,Message,ToWhom}) when is_atom(ToWhom) ->
       {error, {no_match_for_given_atom,Reason}}
   end;
 forward(Vassals,{From,Ref,Message,ToWhom}) when is_list(ToWhom) ->
-  Results = lists:map(fun(TH) -> forward(Vassals,{From,Ref,Message,TH}) end, ToWhom),
+  Results = lists:map(fun(ToH) -> forward(Vassals,{From,Ref,Message,ToH}) end, ToWhom),
   case lists:flatlength(lists:filter(fun(Result) -> case Result of ok -> false; _ -> true end end,Results)) of
     0 -> ok;
     _ -> {warning, Results}
