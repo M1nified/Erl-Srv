@@ -26,6 +26,23 @@
                                 ]).
 
 -define(MAX_FRAME_BUFFER, 1000).
+-define(TIME_STEP,10).%ms
+
+-define(CONST_GRAV, 9.8).
+-define(CONST_CONV_1, 100).
+-define(CONST_CONV_2, 100).
+-define(CONST_COOL, 100).
+-define(CONST_FRIC_1, 100).
+-define(CONST_FRIC_2, 100).
+-define(CONST_DISS, 100).
+-define(CONST_CLUSTER_MASS, 1).
+
+-define(USER_DEFINED_FORCE, [0,0,0]).
+
+-define(TEMP_SIM, 100).
+
+-define(E_UP,[0,0,1]).
+-define(E_DOWN,[0,0,-1]).
 
 -record(thread,{
   pid :: pid(),
@@ -53,3 +70,17 @@
 -type worker() :: #worker{}.
 
 -type socket() :: gen_tcp:socket().
+
+-record(particle,{
+  position :: list(),
+  density :: number()
+}).
+-type particle() :: #particle{}.
+
+-record(cluster,{
+  position :: list(),
+  velocity :: list(),
+  temperature :: number(),
+  particles :: [particle()]
+}).
+-type cluster() :: #cluster{}.
