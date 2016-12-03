@@ -45,13 +45,22 @@ loop(Socket) ->
       gen_tcp:send(Socket,packet:bin_encode(Cluster))
   end.
 
-tcp_recv(Socket,{WorkerReference,new_cluster,Source,Time_0})->
+tcp_recv(Socket,{WorkerReference,new_cluster,Source,Time_0,FramesToCount}) when is_integer(FramesToCount)->
   Cluster = animation:spawn_cluster(Source,Time_0),
   TerminalPID = self(),
-  spawn(fun() -> animate_cluster(TerminalPID,Cluster) end),
-  loop(Socket).
+  spawn(fun() -> animate_cluster(TerminalPID,Cluster,FramesToCount) end),
+  loop(Socket);
 
-animate_cluster(TerminalPID,Cluster) ->
+tcp_recv(Socket,{WorkerReference,add_cluster, Cluster, FramesToCount}) when is_integer(FramesToCount) ->
+  TerminalPID = self(),
+  spawn(fun() -> animate_cluster(TerminalPID,Cluster,FramesToCount) end),
+  loop(Socket);
+
+tcp_recv(_,_) ->
+  trash.
+
+animate_cluster(_,_,0) -> ok;
+animate_cluster(TerminalPID,Cluster, FramesToCount) when is_integer(FramesToCount)->
   NewCluster = physics:step_cluster(Cluster,Cluster#cluster.time+?TIME_STEP),
   TerminalPID ! {cluster, NewCluster},
-  animate_cluster(TerminalPID,NewCluster).
+  animate_cluster(TerminalPID,NewCluster,FramesToCount-1).

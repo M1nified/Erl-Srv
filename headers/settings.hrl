@@ -29,6 +29,12 @@
 -define(TIME_STEP,17).%ms
 -define(PPC,1000). % Particles Per Cluster
 
+-define(MAIN_SOURCE,#source{
+  position = [0,0,0],
+  velocity_range = [[0,0],[0,0],[1,2]],
+  size = [10,10,10]
+}).
+
 -define(CONST_GRAV, 9.8).
 -define(CONST_CONV_1, 100).
 -define(CONST_CONV_2, 100).
@@ -90,7 +96,7 @@
 
 -record(source,{
   position :: list(),
-  velocity_range :: [[list()]],
+  velocity_range :: [[number()]],
   size :: [integer()],
   source_id :: reference()
 }).
