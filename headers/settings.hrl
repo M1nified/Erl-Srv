@@ -26,7 +26,8 @@
                                 ]).
 
 -define(MAX_FRAME_BUFFER, 1000).
--define(TIME_STEP,10).%ms
+-define(TIME_STEP,17).%ms
+-define(PPC,1000). % Particles Per Cluster
 
 -define(CONST_GRAV, 9.8).
 -define(CONST_CONV_1, 100).
@@ -73,14 +74,24 @@
 
 -record(particle,{
   position :: list(),
+  velocity :: list(),
+  temperature :: number(),
   density :: number()
 }).
 -type particle() :: #particle{}.
 
 -record(cluster,{
   position :: list(),
-  velocity :: list(),
-  temperature :: number(),
-  particles :: [particle()]
+  particles :: [particle()],
+  source_id :: reference(),
+  time :: integer()
 }).
 -type cluster() :: #cluster{}.
+
+-record(source,{
+  position :: list(),
+  velocity_range :: [[list()]],
+  size :: [integer()],
+  source_id :: reference()
+}).
+-type source() :: #source{}.

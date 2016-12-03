@@ -1,33 +1,37 @@
 -module(physics).
 
 -export([
-  step_cluster/3
+  step_cluster/2
 ]).
 -include_lib("eunit/include/eunit.hrl").
 -include("../headers/settings.hrl").
 
-step_cluster(OldCluster, Time_0, Time) ->
-  Delta_t = Time - Time_0,
-  Temperature = temp(OldCluster#cluster.temperature,Time),
-  Force = force(
-    f_grav(?CONST_CLUSTER_MASS),
-    f_conv(Temperature),
-    f_fric(OldCluster#cluster.velocity,?CONST_CLUSTER_MASS),
-    ?USER_DEFINED_FORCE
-  ),
-  Velocity = v_delta_t(OldCluster#cluster.velocity,Delta_t,Force,?CONST_CLUSTER_MASS),
-  Position = x_delta_t(OldCluster#cluster.position,Delta_t,OldCluster#cluster.velocity),
-  Particles = step_particles(OldCluster,Delta_t),
+step_cluster(OldCluster, Time) ->
+  Particles = step_particles(OldCluster, Time),
   OldCluster#cluster{
-    position = Position,
-    velocity = Velocity,
-    temperature = Temperature,
     particles = Particles
   }.
 
-step_particles(OldCluster,Delta_t) ->
-  [Particle#particle{density=dens(Particle#particle.density,Delta_t,OldCluster#cluster.velocity)} || Particle <- OldCluster#cluster.particles].
+step_particles(OldCluster, Time) ->
+  [step_particle(Particle, OldCluster#cluster.time, Time) || Particle <- OldCluster#cluster.particles].
 
+step_particle(OldParticle, Time_0, Time) ->
+  Delta_t = Time - Time_0,
+  Delta_t = Time - Time_0,
+  Temperature = temp(OldParticle#particle.temperature,Time),
+  Force = force(
+    f_grav(?CONST_CLUSTER_MASS),
+    f_conv(Temperature),
+    f_fric(OldParticle#particle.velocity,?CONST_CLUSTER_MASS),
+    ?USER_DEFINED_FORCE
+  ),
+  Velocity = v_delta_t(OldParticle#particle.velocity,Delta_t,Force,?CONST_CLUSTER_MASS),
+  Position = x_delta_t(OldParticle#particle.position,Delta_t,OldParticle#particle.velocity),
+  OldParticle#particle{
+    position = Position,
+    velocity = Velocity,
+    temperature = Temperature
+  }.
 
 % =============================================
 

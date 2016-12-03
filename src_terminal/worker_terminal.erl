@@ -16,6 +16,7 @@ init() ->
 
 connected(Socket) ->
   Ref = make_ref(),
+  loop(Socket),
   case gen_tcp:send(Socket,packet:bin_encode({Ref,are_you_there})) of % kinda handshake ;)
     ok ->
       ?DBG("are_you_there -> ok\n"),
@@ -35,3 +36,22 @@ connected(Socket) ->
       ?DBGF("failed to send are_you_there: ~p\n",[Reason]),
       error
   end.
+
+loop(Socket) ->
+  receive
+    {tcp, Socket, Data} ->
+      tcp_recv(Socket,packet:bin_decode(Data));
+    {cluster, Cluster} ->
+      gen_tcp:send(Socket,packet:bin_encode(Cluster))
+  end.
+
+tcp_recv(Socket,{WorkerReference,new_cluster,Source,Time_0})->
+  Cluster = animation:spawn_cluster(Source,Time_0),
+  TerminalPID = self(),
+  spawn(fun() -> animate_cluster(TerminalPID,Cluster) end),
+  loop(Socket).
+
+animate_cluster(TerminalPID,Cluster) ->
+  NewCluster = physics:step_cluster(Cluster,Cluster#cluster.time+?TIME_STEP),
+  TerminalPID ! {cluster, NewCluster},
+  animate_cluster(TerminalPID,NewCluster).
