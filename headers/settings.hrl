@@ -42,7 +42,7 @@
 -define(CONST_FRIC_1, 100).
 -define(CONST_FRIC_2, 100).
 -define(CONST_DISS, 100).
--define(CONST_CLUSTER_MASS, 1).
+-define(CONST_PARTICLE_MASS, 1).
 
 -define(USER_DEFINED_FORCE, [0,0,0]).
 

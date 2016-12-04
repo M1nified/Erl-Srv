@@ -45,7 +45,7 @@ should_pass_message_one_to_one_test() ->
   Self = self(),
   LN ! {Self,Ref,forward,msg1,Self},
   receive
-    {Self,Ref,msg1} -> ok;
+    msg1 -> ok;
     _ -> ct:fail()      
   end.
 
@@ -59,11 +59,11 @@ should_pass_message_to_registered_procc_test() ->
     {Ref1, ok} -> ok;
     _ -> ct:fail(unable_to_register)
   end,
-  Node1Pid = spawn(fun() -> forward(LN,Ref2,msg1,me) end),
+  _ = spawn(fun() -> forward(LN,Ref2,msg1,me) end),
   % ?DBGF("Me sender: ~p\n",[Me]),
   % LN ! {Me,Ref2,forward,msg1,me},
   receive
-    {Node1Pid,Ref2,msg1} -> ok;
+    msg1 -> ok;
     {_,EorW,Reason} -> ct:fail({2,EorW,Reason});
     _ -> ct:fail(wrong_message)
   after
@@ -75,16 +75,16 @@ should_pass_message_to_multiple_proccs_test() ->
   LN = link_node:spawn(),
   Me = self(),
   MeRef = make_ref(),
-  Node2 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok2,Message}} end end),
-  Node3 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok3,Message}} end end),
+  Node2 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,ok2,Message} end end),
+  Node3 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,ok3,Message} end end),
   LN ! {Me,0,reg,node2,Node2},
   LN ! {Me,0,reg,node3,Node3},
-  LN ! {Me,MeRef,forward,info_to_pass,[node2,node3]},
+  LN ! {Me,MeRef,forward,{Me,MeRef,info_to_pass},[node2,node3]},
   receive
-    {MeRef,{ok2,info_to_pass}} -> ok
+    {MeRef,ok2,info_to_pass} -> ok
   end,
   receive
-    {MeRef,{ok3,info_to_pass}} -> ok
+    {MeRef,ok3,info_to_pass} -> ok
   end.
 
   
@@ -96,7 +96,7 @@ should_pass_message_to_all_registered_procs_test() ->
   Node3 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok3,Message}} end end),
   LN ! {Me,0,reg,node2,Node2},
   LN ! {Me,0,reg,node3,Node3},
-  LN ! {Me,MeRef,forward,info_to_pass,to_all},
+  LN ! {Me,MeRef,forward,{Me,MeRef,info_to_pass},to_all},
   receive
     {MeRef,{ok2,info_to_pass}} -> ok
   end,
@@ -106,5 +106,5 @@ should_pass_message_to_all_registered_procs_test() ->
 
 % HELPERS
 
-forward(LinkNode,Ref,ToWhom,Message) ->
-  LinkNode ! {self(),Ref,forward,ToWhom,Message}.
+forward(LinkNode,Ref,Message,ToWhom) ->
+  LinkNode ! {self(),Ref,forward,Message,ToWhom}.

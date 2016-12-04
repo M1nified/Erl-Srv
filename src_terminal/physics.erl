@@ -20,12 +20,12 @@ step_particle(OldParticle, Time_0, Time) ->
   Delta_t = Time - Time_0,
   Temperature = temp(OldParticle#particle.temperature,Time),
   Force = force(
-    f_grav(?CONST_CLUSTER_MASS),
+    f_grav(?CONST_PARTICLE_MASS),
     f_conv(Temperature),
-    f_fric(OldParticle#particle.velocity,?CONST_CLUSTER_MASS),
+    f_fric(OldParticle#particle.velocity,?CONST_PARTICLE_MASS),
     ?USER_DEFINED_FORCE
   ),
-  Velocity = v_delta_t(OldParticle#particle.velocity,Delta_t,Force,?CONST_CLUSTER_MASS),
+  Velocity = v_delta_t(OldParticle#particle.velocity,Delta_t,Force,?CONST_PARTICLE_MASS),
   Position = x_delta_t(OldParticle#particle.position,Delta_t,OldParticle#particle.velocity),
   OldParticle#particle{
     position = Position,

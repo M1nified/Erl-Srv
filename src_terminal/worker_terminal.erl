@@ -42,7 +42,8 @@ loop(Socket) ->
     {tcp, Socket, Data} ->
       tcp_recv(Socket,packet:bin_decode(Data));
     {cluster, Cluster} ->
-      gen_tcp:send(Socket,packet:bin_encode(Cluster))
+      gen_tcp:send(Socket,packet:bin_encode(Cluster)),
+      loop(Socket)
   end.
 
 tcp_recv(Socket,{WorkerReference,new_cluster,Source,Time_0,FramesToCount}) when is_integer(FramesToCount)->

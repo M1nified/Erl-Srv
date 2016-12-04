@@ -41,8 +41,8 @@ recv(Vassals,{From,Ref,forward,Message,ToWhom}) ->
   run(Vassals).
 
 -spec forward(map(),tuple()) -> ok | {error, any()} | {warning, any()}.
-forward(_,{From,Ref,Message,ToWhom}) when is_pid(ToWhom) ->
-  spawn(fun() -> ToWhom ! {From,Ref,Message} end),
+forward(_,{_,_,Message,ToWhom}) when is_pid(ToWhom) ->
+  spawn(fun() -> ToWhom ! Message end),
   ok;
 forward(Vassals,{From,Ref,Message,ToWhom}) when is_atom(ToWhom) ->
   % ?DBGF("forward is atom: ~p\n",[{Vassals,{From,Ref,Message,ToWhom}}]),
@@ -88,9 +88,9 @@ recv_should_forward_message_to_given_pid__test() ->
 recv_should_forward_message_to_registered_process__test() ->
   Ref = make_ref(),
   Me = self(),
-  spawn(fun() -> recv(#{me=>Me},{Me,Ref,forward,{test,message,to},me}) end),
+  spawn(fun() -> recv(#{me=>Me},{Me,Ref,forward,{Ref,test,message,to},me}) end),
   receive
-    {Me,Ref,{test,message,to}} -> ok;
+    {Ref,test,message,to} -> ok;
     _ -> ct:fail()
   end.
   
@@ -108,7 +108,7 @@ recv_should_forward_to_multiple_threads__test() ->
   Me = self(),
   Node2 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok2,Message}} end end),
   Node3 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok3,Message}} end end),
-  spawn(fun() -> recv(#{node2=>Node2,node3=>Node3},{Me,RefMe,forward,message,[node2,node3]}) end),
+  spawn(fun() -> recv(#{node2=>Node2,node3=>Node3},{Me,RefMe,forward,{Me,RefMe,message},[node2,node3]}) end),
   receive
     {RefMe,{ok2,message}} -> ok;
     {RefMe,{ok3,message}} -> ok;
@@ -124,7 +124,7 @@ recv_should_send_back_warning_if_no_match_present__test() ->
   RefMe = make_ref(),
   Me = self(),
   Node2 = spawn(fun() -> receive {From,Ref,Message} -> From ! {Ref,{ok2,Message}} end end),
-  spawn(fun() -> recv(#{node2=>Node2},{Me,RefMe,forward,message,[node2,node3]}) end),
+  spawn(fun() -> recv(#{node2=>Node2},{Me,RefMe,forward,{Me,RefMe,message},[node2,node3]}) end),
   receive
     {RefMe,{ok2,message}} -> ok;
     {RefMe,warning,_} -> ok; 

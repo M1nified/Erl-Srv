@@ -57,6 +57,10 @@ receive_from_inbox(Worker,{Ref,are_you_there}) ->
   OutRef = make_ref(),
   Worker#worker.outbox#thread.pid ! {Worker#worker.head#thread.ref,OutRef,send,{Ref,yes_i_am}},
   ok;
+receive_from_inbox(Worker, {cluster, Cluster}) ->
+  Ref = make_ref(),
+  linknode ! {self(),Ref,forward,{cluster, Cluster}, collector},
+  ok;
 receive_from_inbox(Worker,Data) ->
   L = binary:bin_to_list(Data),
   ?DBG([L,"\n"]),
