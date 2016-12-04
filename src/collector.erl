@@ -51,6 +51,10 @@ listen(Buffer) ->
     {Sender, Ref, get_buffer} ->
       Sender ! {Ref, Buffer},
       listen(Buffer);
-    _ ->
-      listen(Buffer)
+    Any ->
+      recv(Buffer, Any)
   end.
+
+% recv(Buffer, {cluster,Cluster})
+recv(Buffer,_) ->
+  listen(Buffer).

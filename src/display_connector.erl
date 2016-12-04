@@ -19,7 +19,7 @@ run(MyRef) ->
     connector = #thread{pid=self(),ref=MyRef}
   },
   receive
-    {_,_,ready} ->
+    ready ->
       listen_go(DisplConn);
     {error} ->
       ok

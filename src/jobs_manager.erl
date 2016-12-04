@@ -12,39 +12,49 @@ spawn() ->
   {ok, Me}.
 
 wait_for_init_data() ->
+  ?DBG("jobs_manager is waiting for init data\n"),
   receive
     {error} -> ok;
-    {_,_,ready} -> start()
+    ready -> start()
   end.
 
 -spec start() -> any().
 start() ->
-  JobsManager = jobs_manager_spawn(),
-  listen_go(#jobs_manager_settings{
+  JobsManager = #thread{
+    pid = self(),
+    ref = make_ref()
+  },
+  JMS = #jobs_manager_settings{
     jobsmanager = JobsManager
-  }).
+  },
+  spawn(fun() -> listen_go(JMS) end),
+  jobs_manager(JMS).
 
--spec jobs_manager_spawn() -> thread().
-jobs_manager_spawn() ->
-  Ref = make_ref(),
-  #thread{
-    pid = spawn(fun() -> jobs_manager(Ref) end),
-    ref = Ref
-  }.
+% -spec jobs_manager_spawn() -> thread().
+% jobs_manager_spawn() ->
+%   Ref = make_ref(),
+%   #thread{
+%     pid = spawn(fun() -> jobs_manager(Ref) end),
+%     ref = Ref
+%   }.
 
 -spec jobs_manager(thread()) -> any().
-jobs_manager(ManRef) ->
+jobs_manager(JMS) ->
   receive
-    {From,Ref,result, Data} -> 
-      ok;
-    {From,Ref,job_request, Worker} ->
-      ok;
-    {From,Ref,went_offline, Worker} ->
-      ok;
-    {From,Ref,register_worker, Worker} ->
-      ok
+    Any ->
+      recv(JMS,Any)
   end,
-  jobs_manager(ManRef).
+  jobs_manager(JMS).
+
+
+recv(JMS,{From,Ref,result, Data}) -> 
+      ok;
+recv(JMS,{From,Ref,job_request, Worker}) ->
+      ok;
+recv(JMS,{From,Ref,went_offline, Worker}) ->
+      ok;
+recv(JMS,{From,Ref,register_worker, Worker}) ->
+      ok.
 
 -spec listen_go(jobs_manager_settings()) -> any().
 listen_go(Settings) ->

@@ -59,7 +59,7 @@ receive_from_inbox(Worker,{Ref,are_you_there}) ->
   ok;
 receive_from_inbox(Worker, {cluster, Cluster}) ->
   Ref = make_ref(),
-  linknode ! {self(),Ref,forward,{cluster, Cluster}, collector},
+  linknode ! {self(),Ref,forward,{self(),Ref,cluster, Cluster}, jobs},
   ok;
 receive_from_inbox(Worker,Data) ->
   L = binary:bin_to_list(Data),
