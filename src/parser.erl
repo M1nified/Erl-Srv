@@ -9,7 +9,7 @@
 -include("../headers/settings.hrl").
 
 float_to_bin(Value) when is_float(Value) ->
-  <<Value:32/float>>;
+  <<Value:32/little-float>>;
 float_to_bin(Value) when is_number(Value) ->
   float_to_bin(erlang:float(Value));
 float_to_bin(List) when is_list(List) ->
