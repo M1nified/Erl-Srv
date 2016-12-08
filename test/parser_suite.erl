@@ -10,10 +10,10 @@
 %   ?match("{\"a\":2,\"b\":3}",parser:map_to_json(#{a=>2,b=>3})).
 
 float_to_bin_should_parse_single_float__test() ->
-  <<63,192,0,0>> = parser:float_to_bin(1.5).
+  <<0,0,192,63>> = parser:float_to_bin(1.5).
 
 float_to_bin_should_parse_single_integer__test() ->
-  <<63,128,0,0>> = parser:float_to_bin(1).
+  <<0,0,128,63>> = parser:float_to_bin(1).
 
 float_to_bin_should_parse_list_of_numbers__test() ->
-  <<63,192,0,0,63,128,0,0>> = parser:float_to_bin([1.5,1]).
+  <<0,0,192,63,0,0,128,63>> = parser:float_to_bin([1.5,1]).
