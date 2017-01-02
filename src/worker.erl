@@ -31,6 +31,7 @@ run(TheWorkerRef,JobsManagerSettings,InboxThread,OutboxThread, Socket) ->
   ?DBGF("~p Worker spawned and running...\n~p\n", [TheWorkerRef,Worker]),
   Worker#worker.inbox#thread.pid ! {worker, Worker},
   Worker#worker.outbox#thread.pid ! {worker, Worker},
+  gen_server:start_link({local,?WORKER},?WORKER,[{worker,Worker}],[{debug,[log]}]),
   worker_loop(Worker),
   ok.
 
@@ -45,26 +46,12 @@ worker_loop(Worker) ->
       worker_loop(Worker);
     {inbox,InboxRef, Data} ->
       ?DBGF("~p Received from worker's inbox: ~p\n",[Worker#worker.head#thread.ref,Data]),
-      receive_from_inbox(Worker,Data),
+      gen_server:cast(?WORKER,{inbox,Worker,Data}),
       worker_loop(Worker);
     {Sender, MsgRef, getworker} ->
       Sender ! {MsgRef,{worker,Worker}},
       worker_loop(Worker)
   end.
-
--spec receive_from_inbox(worker(),tuple()) -> any().
-receive_from_inbox(Worker,{Ref,are_you_there}) ->
-  OutRef = make_ref(),
-  Worker#worker.outbox#thread.pid ! {Worker#worker.head#thread.ref,OutRef,send,{Ref,yes_i_am}},
-  ok;
-receive_from_inbox(Worker, {cluster, Cluster}) ->
-  Ref = make_ref(),
-  linknode ! {self(),Ref,forward,{self(),Ref,cluster, Cluster}, jobs},
-  ok;
-receive_from_inbox(Worker,Data) ->
-  L = binary:bin_to_list(Data),
-  ?DBG([L,"\n"]),
-  ok.
 
 -spec inbox_spawn() -> thread().
 inbox_spawn() ->
