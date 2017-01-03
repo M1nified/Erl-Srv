@@ -32,28 +32,6 @@
 -define(TIME_STEP,17).%ms
 -define(PPC,1000). % Particles Per Cluster
 
--define(MAIN_SOURCE,#source{
-  position = [0,0,0],
-  velocity_range = [[0,0],[0,0],[1,2]],
-  size = [10,10,10]
-}).
-
--define(CONST_GRAV, 9.8).
--define(CONST_CONV_1, 100).
--define(CONST_CONV_2, 100).
--define(CONST_COOL, 100).
--define(CONST_FRIC_1, 100).
--define(CONST_FRIC_2, 100).
--define(CONST_DISS, 100).
--define(CONST_PARTICLE_MASS, 1).
-
--define(USER_DEFINED_FORCE, [0,0,0]).
-
--define(TEMP_SIM, 100).
-
--define(E_UP,[0,0,1]).
--define(E_DOWN,[0,0,-1]).
-
 -record(thread,{
   pid :: pid(),
   ref :: reference()
@@ -80,27 +58,3 @@
 -type worker() :: #worker{}.
 
 -type socket() :: gen_tcp:socket().
-
--record(particle,{
-  position :: list(),
-  velocity :: list(),
-  temperature :: number(),
-  density :: number()
-}).
--type particle() :: #particle{}.
-
--record(cluster,{
-  position :: list(),
-  particles :: [particle()],
-  source_id :: reference(),
-  time :: integer()
-}).
--type cluster() :: #cluster{}.
-
--record(source,{
-  position :: list(),
-  velocity_range :: [[number()]],
-  size :: [integer()],
-  source_id :: reference()
-}).
--type source() :: #source{}.
