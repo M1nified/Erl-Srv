@@ -1,3 +1,4 @@
+% server worker behaviour
 -module(example_worker).
 -behaviour(gen_server).
 -export([
@@ -11,7 +12,8 @@
 -include("../headers/settings.hrl").
 
 -record(state,{
-  worker :: worker()
+  worker :: worker(),
+  iteration = 0 :: integer()
 }).
 -type state() :: #state{}.
 
@@ -20,12 +22,16 @@ init(Args) ->
   MArgs = maps:from_list(Args),
   State = #state{},
   case maps:get(worker,MArgs,empty) of
-    empty -> {ok, ok};
+    empty -> {ok, #state{}};
     Worker ->
       ?DBG("Worker applied\n"),
       {ok, State#state{worker=Worker}}
   end.
 
+handle_call(next_job,_From,State) ->
+  % ?DBGF("handle_call State == ~p\n",[State]),
+  [{job,Job},{state,NewState}] = next_job(State),
+  {reply,Job,NewState};
 handle_call(Request,From,State) ->
   ?DBGF("handle_call(~p,~p,~p).~n",[Request,From,State]),
   Response = handle_call_response,
@@ -38,7 +44,10 @@ handle_cast({inbox,Worker,Data},State) ->
 handle_cast({Ref,{result,Result}},State) ->
   {noreply,State}.
 
-% 
+next_job(State) ->
+  [{job,{call,{somejob,State#state.iteration}}},{state,State#state{iteration = State#state.iteration + 1}}].
+
+% old
 -spec receive_from_inbox(worker(),tuple()) -> any().
 receive_from_inbox(Worker,{Ref,are_you_there}) ->
   OutRef = make_ref(),

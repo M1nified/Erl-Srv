@@ -1,3 +1,4 @@
+% terminal behaviour
 -module(example_job).
 -behaviour(gen_server).
 -export([

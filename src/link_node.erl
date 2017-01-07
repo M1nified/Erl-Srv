@@ -21,7 +21,11 @@ recv(Vassals,{From,Ref,reg,all,_}) ->
   run(Vassals);
 recv(Vassals,{From,Ref,reg,Name,Pid}) ->
   NewVassals = maps:put(Name,Pid,Vassals),
+  ?DBGF("LinkNode registered new node, all nodes list:~p",[NewVassals]),
   spawn(fun() -> From ! {Ref,ok} end),
+  run(NewVassals);
+recv(Vassals,{From,Ref,remove,Name}) ->
+  NewVassals = maps:remove(Name,Vassals),
   run(NewVassals);
 recv(Vassals,{From,Ref,get_vassals}) ->
   spawn(fun() -> From ! {Ref, Vassals} end),

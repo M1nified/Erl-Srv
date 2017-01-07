@@ -25,8 +25,10 @@ start() ->
     ref = make_ref()
   },
   JMS = #jobs_manager_settings{
-    jobsmanager = JobsManager
+    jobsmanager = JobsManager,
+    nodes = link_node:spawn()
   },
+  gen_server:start_link({local,?WORKER},?WORKER,[],[{debug,[log]}]),
   spawn(fun() -> listen_go(JMS) end),
   jobs_manager(JMS).
 
@@ -39,22 +41,65 @@ start() ->
 %   }.
 
 -spec jobs_manager(thread()) -> any().
-jobs_manager(JMS) ->
+jobs_manager(JMS_0) ->
+  JMS = assign_jobs(JMS_0),
   receive
     Any ->
       recv(JMS,Any)
+  after 0 ->
+    ?DBGF("JobsManager todo: ~p\n",[JMS#jobs_manager_settings.todo]),
+    case lists:flatlength(JMS#jobs_manager_settings.todo) < 10 of
+      true -> jobs_manager(get_next_job(JMS));
+      false -> jobs_manager(JMS)
+    end
   end,
-  jobs_manager(JMS).
+  ok.
 
 
 recv(JMS,{From,Ref,result, Data}) -> 
-      ok;
-recv(JMS,{From,Ref,job_request, Worker}) ->
-      ok;
-recv(JMS,{From,Ref,went_offline, Worker}) ->
-      ok;
+  % gen_server:cast(?WORKER,{result,Data}),
+  jobs_manager(JMS),
+  ok;
+recv(JMS,{From,Ref,unleash, Worker}) ->
+  jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
+  ok;
+recv(JMS,{_From,_Ref,remove, Worker}) ->
+  JMS#jobs_manager_settings.nodes ! {self(),make_ref(),remove,Worker#worker.head#thread.ref},
+  jobs_manager(JMS#jobs_manager_settings{free_workers = lists:filter(fun (W) -> W#worker.head#thread.ref /= Worker#worker.head#thread.ref end, JMS#jobs_manager_settings.free_workers)}),
+  ok;
 recv(JMS,{From,Ref,register_worker, Worker}) ->
-      ok.
+  JMS#jobs_manager_settings.nodes ! {self(),make_ref(),reg,Worker#worker.head#thread.ref,Worker#worker.head#thread.pid},
+  jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
+  ok;
+recv(Other,Data) ->
+  ?DBGF("JobsManager recv other: ~p ~p\n",[Other,Data]).
+
+get_next_job(JMS) ->
+      JMS#jobs_manager_settings{todo = lists:flatten([JMS#jobs_manager_settings.todo ++ [gen_server:call(?WORKER,next_job)]])}.
+
+assign_jobs(JMS) ->
+  % ?DBGF("JobsManager assign_jobs, JMS: ~p\n",[JMS]),
+  case pop_fst(JMS#jobs_manager_settings.todo) of
+    {error, nothing_to_pop} ->
+      JMS;
+    {Task,Queue} ->
+      % ?DBGF("JobsManager assign_jobs, task: ~p\n",[Task]),
+      JMS2 = JMS#jobs_manager_settings{todo = Queue},
+      case pop_fst(JMS2#jobs_manager_settings.free_workers) of
+        {error, nothing_to_pop} ->
+          JMS;
+        {First, Rest} when is_list(Rest) ->
+          First#worker.head#thread.pid ! {jms, assignment, Task},
+          JMS2#jobs_manager_settings{free_workers = Rest}
+      end
+  end.
+
+pop_fst([]) ->
+  {error, nothing_to_pop};
+pop_fst([First]) ->
+  {First, []};
+pop_fst([F|Tail]) ->
+  {F,Tail}.
 
 -spec listen_go(jobs_manager_settings()) -> any().
 listen_go(Settings) ->
@@ -99,3 +144,8 @@ register_the_worker() ->
 
 %% LOCAL UNIT TESTS
 -include_lib("eunit/include/eunit.hrl").
+
+pop_fst_should_pop_first_element__test() ->
+  {1,[]} = pop_fst([1]),
+  {somejob,[]} = pop_fst([somejob]),
+  {1,[2,3,4,5]} = pop_fst([1,2,3,4,5]).

@@ -39,7 +39,10 @@
 -type thread() :: #thread{}.
 
 -record(jobs_manager_settings,{
-  jobsmanager :: thread()
+  jobsmanager :: thread(),
+  nodes :: pid(),
+  todo = [] :: list(),
+  free_workers = [] :: list()
 }).
 -type jobs_manager_settings() :: #jobs_manager_settings{}.
 
@@ -53,7 +56,8 @@
   head :: thread(),
   inbox :: thread(),
   outbox :: thread(),
-  socket :: socket()
+  socket :: socket(),
+  is_working = false :: boolean()
 }).
 -type worker() :: #worker{}.
 
