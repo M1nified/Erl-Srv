@@ -41,11 +41,12 @@ handle_call(Request,From,State) ->
 handle_cast({inbox,Worker,Data},State) ->
   receive_from_inbox(Worker,Data),
   {noreply,State};
-handle_cast({Ref,{result,Result}},State) ->
+handle_cast({result,Result},State) ->
+  ?DBGF("handle_cast, received result: ~p",[Result]),
   {noreply,State}.
 
 next_job(State) ->
-  [{job,{call,{somejob,State#state.iteration}}},{state,State#state{iteration = State#state.iteration + 1}}].
+  [{job,{power,State#state.iteration}},{state,State#state{iteration = State#state.iteration + 1}}].
 
 % old
 -spec receive_from_inbox(worker(),tuple()) -> any().

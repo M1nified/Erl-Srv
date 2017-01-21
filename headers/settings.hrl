@@ -57,7 +57,8 @@
   inbox :: thread(),
   outbox :: thread(),
   socket :: socket(),
-  is_working = false :: boolean()
+  is_working = false :: boolean(),
+  jmgr :: thread()
 }).
 -type worker() :: #worker{}.
 

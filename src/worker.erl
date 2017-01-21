@@ -26,7 +26,8 @@ run(TheWorkerRef,JobsManagerSettings,InboxThread,OutboxThread, Socket) ->
     head = #thread{pid = self(), ref = TheWorkerRef},
     inbox = InboxThread,
     outbox = OutboxThread,
-    socket = Socket
+    socket = Socket,
+    jmgr = JobsManagerSettings#jobs_manager_settings.jobsmanager
   },
   JobsManagerSettings#jobs_manager_settings.jobsmanager#thread.pid ! {self(),TheWorkerRef,register_worker,Worker},
   ?DBGF("~p Worker spawned and running...\n~p\n", [TheWorkerRef,Worker]),
@@ -40,9 +41,13 @@ run(TheWorkerRef,JobsManagerSettings,InboxThread,OutboxThread, Socket) ->
 worker_loop(Worker) ->
   InboxRef = Worker#worker.inbox#thread.ref,
   receive
-    {jms, assignment, Task} ->
-      Worker#worker.outbox#thread.pid ! {Worker#worker.head#thread.ref, make_ref(), send, Task},
+    {jms, assignment, {MethodType, {task, Task}}} ->
+      ?DBGF("~p Received task: ~p\n",[Worker#worker.head#thread.ref, Task]),
+      Worker#worker.outbox#thread.pid ! {Worker#worker.head#thread.ref, make_ref(), send, {MethodType, {task, Task}}},
       worker_loop(Worker);
+    {inbox,InboxRef, {result, Result}} ->
+      Worker#worker.jmgr#thread.pid ! {{worker, Worker},{result, Result}},
+      worker_loop(Worker#worker{is_working = false});
     {inbox,InboxRef, {error,enotsock}} -> % kill, terminal disconnected
       kill(Worker);
     {inbox,InboxRef, {error, Reason}} ->

@@ -40,14 +40,14 @@ start() ->
 %     ref = Ref
 %   }.
 
--spec jobs_manager(thread()) -> any().
+-spec jobs_manager(jobs_manager_settings()) -> any().
 jobs_manager(JMS_0) ->
   JMS = assign_jobs(JMS_0),
   receive
     Any ->
       recv(JMS,Any)
   after 0 ->
-    ?DBGF("JobsManager todo: ~p\n",[JMS#jobs_manager_settings.todo]),
+    % ?DBGF("JobsManager todo: ~p\n",[JMS#jobs_manager_settings.todo]),
     case lists:flatlength(JMS#jobs_manager_settings.todo) < 10 of
       true -> jobs_manager(get_next_job(JMS));
       false -> jobs_manager(JMS)
@@ -55,10 +55,9 @@ jobs_manager(JMS_0) ->
   end,
   ok.
 
-
-recv(JMS,{From,Ref,result, Data}) -> 
-  % gen_server:cast(?WORKER,{result,Data}),
-  jobs_manager(JMS),
+recv(JMS,{{worker,Worker},{result,Result}}) ->
+  gen_server:cast(?WORKER,{result,Result}),
+  jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
   ok;
 recv(JMS,{From,Ref,unleash, Worker}) ->
   jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
@@ -71,8 +70,9 @@ recv(JMS,{From,Ref,register_worker, Worker}) ->
   JMS#jobs_manager_settings.nodes ! {self(),make_ref(),reg,Worker#worker.head#thread.ref,Worker#worker.head#thread.pid},
   jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
   ok;
-recv(Other,Data) ->
-  ?DBGF("JobsManager recv other: ~p ~p\n",[Other,Data]).
+recv(JMS,Data) ->
+  ?DBGF("JobsManager recv other: ~p ~p\n",[JMS,Data]),
+  jobs_manager(JMS).
 
 get_next_job(JMS) ->
       JMS#jobs_manager_settings{todo = lists:flatten([JMS#jobs_manager_settings.todo ++ [gen_server:call(?WORKER,next_job)]])}.
@@ -89,7 +89,7 @@ assign_jobs(JMS) ->
         {error, nothing_to_pop} ->
           JMS;
         {First, Rest} when is_list(Rest) ->
-          First#worker.head#thread.pid ! {jms, assignment, Task},
+          First#worker.head#thread.pid ! {jms, assignment, {call, {task, Task}}},
           JMS2#jobs_manager_settings{free_workers = Rest}
       end
   end.

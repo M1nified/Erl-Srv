@@ -45,8 +45,8 @@ recv_exec(_,shutdown) ->
 %   spawn(fun() -> animate_cluster(TerminalPID,Cluster,FramesToCount) end),
 %   loop(Socket);
 
-tcp_recv(Socket,{call,Request}) ->
-  Response = {response, gen_server:call(?JOB,packet:bin_decode(Request))},
+tcp_recv(Socket,{call,{task, Task}}) ->
+  Response = {result, gen_server:call(?JOB,packet:bin_decode(Task))},
   ?DBGF("Response: ~p\n",[Response]),
   gen_tcp:send(Socket,packet:bin_encode(Response)),
   loop(Socket);
