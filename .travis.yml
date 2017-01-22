@@ -21,4 +21,4 @@ otp_release:
 before_script:
   - "erl -make"
   - "chmod 777 test.sh"
-script: "./test.sh"
+script: "./_test.sh"
