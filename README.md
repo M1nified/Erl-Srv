@@ -6,7 +6,9 @@
 
 - Erlang/OTP ^19.0
 
-# Executables
+# Dev
+
+## Executables
 
 - `test.sh` / `test.bat` runs tests
 - `server_run.bat` starts whole server_run
