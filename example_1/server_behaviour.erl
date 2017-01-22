@@ -1,5 +1,5 @@
 % server worker behaviour
--module(example_worker).
+-module(server_behaviour).
 -behaviour(gen_server).
 -export([
   init/1,

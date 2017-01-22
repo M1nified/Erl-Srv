@@ -1,5 +1,5 @@
 % terminal behaviour
--module(example_job).
+-module(terminal_behaviour).
 -behaviour(gen_server).
 -export([
   init/1,
