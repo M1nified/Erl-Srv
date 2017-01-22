@@ -3,7 +3,7 @@
   spawn/0
 ]).
 -include_lib("eunit/include/eunit.hrl").
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 spawn() ->
   spawn(fun() -> run(#{}) end).
@@ -24,7 +24,7 @@ recv(Vassals,{From,Ref,reg,Name,Pid}) ->
   ?DBGF("LinkNode registered new node, all nodes list:~p",[NewVassals]),
   spawn(fun() -> From ! {Ref,ok} end),
   run(NewVassals);
-recv(Vassals,{From,Ref,remove,Name}) ->
+recv(Vassals,{_From,_Ref,remove,Name}) ->
   NewVassals = maps:remove(Name,Vassals),
   run(NewVassals);
 recv(Vassals,{From,Ref,get_vassals}) ->

@@ -4,7 +4,7 @@
   get_socket/0,
   connect_worker/0
 ]).
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 get_lsock() ->
   case gen_tcp:listen(

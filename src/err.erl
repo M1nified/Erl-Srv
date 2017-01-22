@@ -2,7 +2,7 @@
 -export([
   error/2
 ]).
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 error({error,Reason},{File,Line}) ->
   ?DBGOBJ([{Reason,{File,Line}}]).

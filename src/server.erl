@@ -2,7 +2,7 @@
 -export([
   run/0
 ]).
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 run() ->
   ?DBG("run/0\n"),

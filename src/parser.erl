@@ -6,7 +6,7 @@
 ]).
 -include_lib("eunit/include/eunit.hrl").
 -include("../headers/asserts.hrl").
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 float_to_bin(Value) when is_float(Value) ->
   <<Value:32/little-float>>;

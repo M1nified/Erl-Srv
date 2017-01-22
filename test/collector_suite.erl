@@ -1,9 +1,9 @@
 -module(collector_suite).
 -include_lib("eunit/include/eunit.hrl").
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 spawn__1_test() ->
-  {ok, ReadyStorageThread} = collector:spawn().
+  {ok, _ReadyStorageThread} = collector:spawn().
 
 kill__1_test() ->
   {ok, Rst} = collector:spawn(),

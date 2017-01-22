@@ -2,7 +2,7 @@
 -export([
   init/0
 ]).
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 init() ->
   case gen_tcp:connect(?SERVER_ADDR, ?WORKER_PORT, ?WORKER_TERMINAL_OPTIONS) of

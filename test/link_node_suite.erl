@@ -1,6 +1,6 @@
 -module(link_node_suite).
 -include_lib("eunit/include/eunit.hrl").
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 should_spawn_test() ->
   case link_node:spawn() of

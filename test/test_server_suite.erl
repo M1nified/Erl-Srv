@@ -3,7 +3,7 @@
 
 ]).
 -include_lib("eunit/include/eunit.hrl").
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 get_listensocket__1_test() ->
   {ok,LSock} = test_server:get_lsock(),

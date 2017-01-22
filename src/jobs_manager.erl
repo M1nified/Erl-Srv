@@ -2,7 +2,7 @@
 -export([
   spawn/0
 ]).
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 spawn() ->
   Pid = erlang:spawn(fun wait_for_init_data/0),
@@ -59,14 +59,14 @@ recv(JMS,{{worker,Worker},{result,Result}}) ->
   gen_server:cast(?WORKER,{result,Result}),
   jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
   ok;
-recv(JMS,{From,Ref,unleash, Worker}) ->
+recv(JMS,{_From,_Ref,unleash, Worker}) ->
   jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
   ok;
 recv(JMS,{_From,_Ref,remove, Worker}) ->
   JMS#jobs_manager_settings.nodes ! {self(),make_ref(),remove,Worker#worker.head#thread.ref},
   jobs_manager(JMS#jobs_manager_settings{free_workers = lists:filter(fun (W) -> W#worker.head#thread.ref /= Worker#worker.head#thread.ref end, JMS#jobs_manager_settings.free_workers)}),
   ok;
-recv(JMS,{From,Ref,register_worker, Worker}) ->
+recv(JMS,{_From,_Ref,register_worker, Worker}) ->
   JMS#jobs_manager_settings.nodes ! {self(),make_ref(),reg,Worker#worker.head#thread.ref,Worker#worker.head#thread.pid},
   jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
   ok;
@@ -137,9 +137,6 @@ accept_go(ListenSock,Settings) ->
 accept_ok(Socket,Settings) ->
   io:fwrite("accept_ok\n"),
   worker:spawn(Socket,Settings),
-  ok.
-
-register_the_worker() ->
   ok.
 
 %% LOCAL UNIT TESTS

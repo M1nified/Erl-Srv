@@ -2,7 +2,7 @@
 -export([
   spawn/0
 ]).
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 -spec spawn() -> thread().
 spawn() ->

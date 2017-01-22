@@ -2,7 +2,7 @@
 -export([
   spawn/0
 ]).
--include("../headers/settings.hrl").
+-include("../headers/server_header.hrl").
 
 -spec spawn() -> {ok,thread()}.
 spawn() ->
@@ -14,7 +14,7 @@ spawn() ->
   {ok, ReStThread}.
 
 -spec run(reference()) -> any().
-run(MyRef) ->
+run(_MyRef) ->
   listen(#{}).
 
 -spec listen(map()) -> any().
