@@ -2,6 +2,7 @@
 -export([
   spawn/0
 ]).
+-define(DEBUG, false).
 -include_lib("eunit/include/eunit.hrl").
 -include("../headers/server_header.hrl").
 

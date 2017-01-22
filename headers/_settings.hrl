@@ -1,4 +1,6 @@
+-ifndef(DEBUG).
 -define(DEBUG, true).
+-endif.
 
 -define(WORKER_PORT, 5678).
 -define(DISPLAY_PORT, 8765).

@@ -4,14 +4,15 @@
 }).
 -type thread() :: #thread{}.
 
--record(jobs_manager_settings,{
+-record(jm_state,{
   jobsmanager :: thread(),
   nodes :: pid(),
   todo = [] :: list(),
-  free_workers = [] :: list(),
-  bm :: module()
+  free_workers = [] :: [worker()],
+  bm :: module(),
+  pending_tasks = #{} :: map() % {worker_ref, task}
 }).
--type jobs_manager_settings() :: #jobs_manager_settings{}.
+-type jm_state() :: #jm_state{}.
 
 -record(display_connector,{
   connector :: thread(),

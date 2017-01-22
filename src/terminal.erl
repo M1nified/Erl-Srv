@@ -50,10 +50,19 @@ recv_exec(_,_,shutdown) ->
 %   loop(Socket);
 
 tcp_recv(Socket,BehaviourModule,{call,{task, Task}}) ->
-  Response = {result, gen_server:call(BehaviourModule,packet:bin_decode(Task))},
-  ?DBGF("Response: ~p\n",[Response]),
-  gen_tcp:send(Socket,packet:bin_encode(Response)),
-  loop(Socket,BehaviourModule);
+  try gen_server:call(BehaviourModule,packet:bin_decode(Task)) of
+    Result ->
+      Response = {result, Result},
+      ?DBGF("Response: ~p\n",[Response]),
+      gen_tcp:send(Socket,packet:bin_encode(Response)),
+      loop(Socket,BehaviourModule)
+  catch
+    Error ->
+      Response = {error, Error},
+      ?DBGF("Terminal's behaviour module caused an error: ~p\n",[Error]),
+      gen_tcp:send(Socket,packet:bin_encode(Response)),
+      loop(Socket,BehaviourModule)
+  end;
 tcp_recv(Socket,BehaviourModule,{cast,Request}) ->
   gen_server:cast(BehaviourModule,packet:bin_decode(Request)),
   loop(Socket,BehaviourModule);

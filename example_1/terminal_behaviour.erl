@@ -23,7 +23,8 @@ init(Args) ->
 
 handle_call({power,Number},_From,State) ->
   io:fwrite("power: ~p~n",[Number]),
-  Response = math:pow(Number,2),
+  Response = {Number, math:pow(Number,2)},
+  % Response = {Number, math:pow(Number,Number)},
   timer:sleep(500),
   {reply, Response, State};
 handle_call(Request,From,State) ->

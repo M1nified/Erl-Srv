@@ -37,25 +37,12 @@ handle_call(Request,From,State) ->
   NewState = State,
   {reply,Response,NewState}.
 
-handle_cast({inbox,Worker,Data},State) ->
-  receive_from_inbox(Worker,Data),
-  {noreply,State};
-handle_cast({result,Result},State) ->
-  io:fwrite("handle_cast, received result: ~p",[Result]),
+handle_cast({result,{Number,Power}},State) ->
+  io:fwrite("Result for ~p is ~p\n",[Number, Power]),
   {noreply,State}.
 
 next_job(State) ->
   [{job,{power,State#state.iteration}},{state,State#state{iteration = State#state.iteration + 1}}].
-
-% old
-receive_from_inbox(Worker, {cluster, Cluster}) ->
-  Ref = make_ref(),
-  linknode ! {self(),Ref,forward,{self(),Ref,cluster, Cluster}, jobs},
-  ok;
-receive_from_inbox(Worker,Data) ->
-  L = packet:bin_decode(Data),
-  io:fwrite("~p\n",[L]),
-  ok.
 
 % Unused
 terminate(_,_) ->
