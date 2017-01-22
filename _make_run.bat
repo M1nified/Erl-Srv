@@ -1,0 +1,1 @@
+erl -make && _server_run.bat
