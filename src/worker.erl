@@ -27,13 +27,14 @@ run(TheWorkerRef,JobsManagerSettings,InboxThread,OutboxThread, Socket) ->
     inbox = InboxThread,
     outbox = OutboxThread,
     socket = Socket,
-    jmgr = JobsManagerSettings#jobs_manager_settings.jobsmanager
+    jmgr = JobsManagerSettings#jobs_manager_settings.jobsmanager,
+    bm = JobsManagerSettings#jobs_manager_settings.bm
   },
   JobsManagerSettings#jobs_manager_settings.jobsmanager#thread.pid ! {self(),TheWorkerRef,register_worker,Worker},
   ?DBGF("~p Worker spawned and running...\n~p\n", [TheWorkerRef,Worker]),
   Worker#worker.inbox#thread.pid ! {worker, Worker},
   Worker#worker.outbox#thread.pid ! {worker, Worker},
-  gen_server:start_link({local,?WORKER},?WORKER,[{worker,Worker}],[{debug,[log]}]),
+  gen_server:start_link({local,Worker#worker.bm},Worker#worker.bm,[{worker,Worker}],[{debug,[log]}]),
   worker_loop(Worker),
   ok.
 
@@ -55,7 +56,7 @@ worker_loop(Worker) ->
       worker_loop(Worker);
     {inbox,InboxRef, Data} ->
       ?DBGF("~p Received from worker's inbox: ~p\n",[Worker#worker.head#thread.ref,Data]),
-      gen_server:cast(?WORKER,{inbox,Worker,Data}),
+      gen_server:cast(Worker#worker.bm,{inbox,Worker,Data}),
       worker_loop(Worker);
     {Sender, MsgRef, getworker} ->
       Sender ! {MsgRef,{worker,Worker}},

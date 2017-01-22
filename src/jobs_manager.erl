@@ -15,21 +15,22 @@ wait_for_init_data() ->
   ?DBG("jobs_manager is waiting for init data\n"),
   receive
     {error} -> ok;
-    ready -> start()
+    {behaviour_module, BehaviourModule} -> start(BehaviourModule)
   end.
 
--spec start() -> any().
-start() ->
+-spec start(module()) -> any().
+start(BehaviourModule) ->
   JobsManager = #thread{
     pid = self(),
     ref = make_ref()
   },
   JMS = #jobs_manager_settings{
     jobsmanager = JobsManager,
-    nodes = link_node:spawn()
+    nodes = link_node:spawn(),
+    bm = BehaviourModule
   },
-  gen_server:start_link({local,?WORKER},?WORKER,[],[{debug,[log]}]),
-  spawn(fun() -> listen_go(JMS) end),
+  gen_server:start_link({local,BehaviourModule},BehaviourModule,[],[{debug,[log]}]),
+  erlang:spawn(fun() -> listen_go(JMS) end),
   jobs_manager(JMS).
 
 % -spec jobs_manager_spawn() -> thread().
@@ -56,7 +57,7 @@ jobs_manager(JMS_0) ->
   ok.
 
 recv(JMS,{{worker,Worker},{result,Result}}) ->
-  gen_server:cast(?WORKER,{result,Result}),
+  gen_server:cast(JMS#jobs_manager_settings.bm,{result,Result}),
   jobs_manager(JMS#jobs_manager_settings{free_workers = [JMS#jobs_manager_settings.free_workers ++ Worker]}),
   ok;
 recv(JMS,{_From,_Ref,unleash, Worker}) ->
@@ -75,7 +76,7 @@ recv(JMS,Data) ->
   jobs_manager(JMS).
 
 get_next_job(JMS) ->
-      JMS#jobs_manager_settings{todo = lists:flatten([JMS#jobs_manager_settings.todo ++ [gen_server:call(?WORKER,next_job)]])}.
+      JMS#jobs_manager_settings{todo = lists:flatten([JMS#jobs_manager_settings.todo ++ [gen_server:call(JMS#jobs_manager_settings.bm,next_job)]])}.
 
 assign_jobs(JMS) ->
   % ?DBGF("JobsManager assign_jobs, JMS: ~p\n",[JMS]),

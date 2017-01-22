@@ -8,7 +8,8 @@
   jobsmanager :: thread(),
   nodes :: pid(),
   todo = [] :: list(),
-  free_workers = [] :: list()
+  free_workers = [] :: list(),
+  bm :: module()
 }).
 -type jobs_manager_settings() :: #jobs_manager_settings{}.
 
@@ -24,7 +25,8 @@
   outbox :: thread(),
   socket :: socket(),
   is_working = false :: boolean(),
-  jmgr :: thread()
+  jmgr :: thread(),
+  bm :: module()
 }).
 -type worker() :: #worker{}.
 
