@@ -39,7 +39,7 @@ Both `server_settings` and `terminal_settings` are of type `[proplist:property()
 - `terminal_port`, of type `inet:port_number()`
 - `server_address`, of type `inet:socket_address() | inet:hostname()`
 
-Please look into [main_server.erl](ebin/main_server.erl) and [main_terminal](ebin/main_terminal.erl) for better understanding.
+Please look into [main_server.erl](example_1/main_server.erl) and [main_terminal.erl](example_1/main_terminal.erl) for better understanding.
 
 
 # Dev
