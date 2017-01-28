@@ -2,13 +2,10 @@
 -define(DEBUG, true).
 -endif.
 
--define(WORKER_PORT, 5678).
+-define(TERMINAL_PORT_DEFAULT, 5678).
 -define(DISPLAY_PORT, 8765).
 
--define(JOB,example_job).
--define(WORKER,example_worker).
-
--define(SERVER_ADDR, "localhost").
+-define(SERVER_ADDR_DEFAULT, "localhost").
 
 -define(WORKER_LISTEN_OPTIONS, [
                                   binary,
@@ -22,7 +19,7 @@
                                   {active, false},
                                   {keepalive, true}
                                 ]).
--define(WORKER_TERMINAL_OPTIONS,[
+-define(TERMINAL_TCP_OPTIONS,[
                                   binary,
                                   {packet, 0}
                                 ]).

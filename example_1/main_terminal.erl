@@ -4,4 +4,7 @@
 ]).
 
 main(Name) ->
-  tcp_cc:start_terminal(Name, terminal_behaviour).
+  tcp_cc:start_terminal(Name, terminal_behaviour,[
+    {terminal_port, 1234},
+    {server_address,"localhost"}
+  ]).

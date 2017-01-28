@@ -15,11 +15,11 @@ wait_for_init_data() ->
   ?DBG("jobs_manager is waiting for init data\n"),
   receive
     {error} -> ok;
-    {behaviour_module, BehaviourModule} -> start(BehaviourModule)
+    {{behaviour_module, BehaviourModule},{settings, SettingsMap}} -> start(BehaviourModule,SettingsMap)
   end.
 
--spec start(module()) -> any().
-start(BehaviourModule) ->
+-spec start(module(),map()) -> any().
+start(BehaviourModule,SettingsMap) ->
   JobsManager = #thread{
     pid = self(),
     ref = make_ref()
@@ -27,7 +27,8 @@ start(BehaviourModule) ->
   JMS = #jm_state{
     jobsmanager = JobsManager,
     nodes = link_node:spawn(),
-    bm = BehaviourModule
+    bm = BehaviourModule,
+    server_settings = SettingsMap
   },
   gen_server:start_link({local,BehaviourModule},BehaviourModule,[],[{debug,[log]}]),
   erlang:spawn(fun() -> listen_go(JMS) end),
@@ -150,7 +151,8 @@ pop_fst([F|Tail]) ->
 -spec listen_go(jm_state()) -> any().
 listen_go(Settings) ->
   case gen_tcp:listen(
-      ?WORKER_PORT,
+      % ?WORKER_PORT,
+      proplists:get_value(worker_port,Settings#jm_state.server_settings,?TERMINAL_PORT_DEFAULT),
       ?WORKER_LISTEN_OPTIONS
     ) of
     {ok, ListenSock} -> listen_ok(ListenSock,Settings);

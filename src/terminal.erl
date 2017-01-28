@@ -1,20 +1,23 @@
 -module(terminal).
 -export([
-  init/0,
-  init/1
+  start/1,
+  start/2
 ]).
 -include("../headers/server_header.hrl").
 
-init()->
-  init(?JOB).
-
-init(BehaviourModule) ->
-  case gen_tcp:connect(?SERVER_ADDR, ?WORKER_PORT, ?WORKER_TERMINAL_OPTIONS) of
+start(BehaviourModule) ->
+  start(BehaviourModule,[]).
+start(BehaviourModule,TerminalSettings) ->
+  case gen_tcp:connect(
+    proplists:get_value(server_address,TerminalSettings,?SERVER_ADDR_DEFAULT),
+    proplists:get_value(worker_port,TerminalSettings,?TERMINAL_PORT_DEFAULT),
+    ?TERMINAL_TCP_OPTIONS
+  ) of
     {ok, Socket} ->
       connected(Socket,BehaviourModule);
     {error, Reason} ->
       ?DBGF("Connect error: ~p\n",[Reason])
-      % init()
+      % start()
   end,
   ok.
 

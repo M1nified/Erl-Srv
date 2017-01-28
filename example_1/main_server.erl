@@ -4,4 +4,6 @@
 ]).
 
 main(Name) ->
-  tcp_cc:start_server(Name, server_behaviour).
+  tcp_cc:start_server(Name, server_behaviour,[
+    {terminal_port, 1234}
+  ]).

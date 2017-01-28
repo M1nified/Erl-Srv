@@ -8,7 +8,7 @@
 
 get_lsock() ->
   case gen_tcp:listen(
-      ?WORKER_PORT,
+      ?TERMINAL_PORT_DEFAULT,
       [
         binary,
         {packet, 0},
@@ -22,7 +22,7 @@ get_lsock() ->
 
 get_socket() ->
   case gen_tcp:listen(
-      ?WORKER_PORT,
+      ?TERMINAL_PORT_DEFAULT,
       [
         binary,
         {packet, 0},
@@ -39,7 +39,7 @@ get_socket() ->
 connect_worker() ->
   gen_tcp:connect(
     "localhost",
-    ?WORKER_PORT,
+    ?TERMINAL_PORT_DEFAULT,
     [
       binary,
       {packet, 0}

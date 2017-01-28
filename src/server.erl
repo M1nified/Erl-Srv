@@ -1,42 +1,41 @@
 -module(server).
 -export([
-  run/0,
-  run/1
+  start/1,
+  start/2
 ]).
 -include("../headers/server_header.hrl").
 
-run() ->
-  run(?WORKER).
-
-run(BehaviourModule) ->
-  ?DBG("run/0\n"),
+start(BehaviourModule) ->
+  start(BehaviourModule,[]).
+start(BehaviourModule,ServerSettings) ->
+  ?DBG("start/0\n"),
   case collector:spawn() of
     {ok, CollectorThr} ->
-      run(BehaviourModule,CollectorThr);
+      start(BehaviourModule,ServerSettings,CollectorThr);
     {error, Reason} ->
-      {error, run_0, Reason}
+      {error, start_0, Reason}
   end.
 
-run(BehaviourModule,CollectorThr) ->
-  ?DBG("run/1\n"),
+start(BehaviourModule,ServerSettings,CollectorThr) ->
+  ?DBG("start/1\n"),
   case display_connector:spawn() of
     {ok, DiCoThread} ->
-      run(BehaviourModule,CollectorThr,DiCoThread);
+      start(BehaviourModule,ServerSettings,CollectorThr,DiCoThread);
     {error, Reason} ->
-      {error, run_1, Reason}
+      {error, start_1, Reason}
   end.
 
-run(BehaviourModule,CollectorThr,DiCoThread) ->
-  ?DBG("run/2\n"),
+start(BehaviourModule,ServerSettings,CollectorThr,DiCoThread) ->
+  ?DBG("start/2\n"),
   case jobs_manager:spawn() of
     {ok, JobsThread} ->
-      run(BehaviourModule,CollectorThr,DiCoThread,JobsThread);
+      start(BehaviourModule,ServerSettings,CollectorThr,DiCoThread,JobsThread);
     {error, Reason} ->
-      {error, run_2, Reason}
+      {error, start_2, Reason}
   end.
 
-run(BehaviourModule,CollectorThr,DiCoThread,JobsThread) ->
-  ?DBG("run/3\n"),
+start(BehaviourModule,ServerSettings,CollectorThr,DiCoThread,JobsThread) ->
+  ?DBG("start/3\n"),
   LinkNode = link_node:spawn(),
   register(linknode,LinkNode),
   RegCollectorThrRef = make_ref(),
@@ -46,7 +45,10 @@ run(BehaviourModule,CollectorThr,DiCoThread,JobsThread) ->
   linknode ! {self(),RegDisplayThrRef,reg,display,DiCoThread#thread.pid},
   linknode ! {self(),RegJobsThrRef,reg,jobs,JobsThread#thread.pid},
   spawn(fun() -> server_connector(LinkNode) end),
-  JobsThread#thread.pid ! {behaviour_module, BehaviourModule},
+  JobsThread#thread.pid ! {
+    {behaviour_module, BehaviourModule},
+    {settings, ServerSettings}
+  },
   linknode ! {self(),make_ref(),forward,ready,to_all}.
 
 server_connector(LinkNode) ->

@@ -5,6 +5,7 @@
 -type thread() :: #thread{}.
 
 -record(jm_state,{
+  server_settings :: [proplist:property()],
   jobsmanager :: thread(),
   nodes :: pid(),
   todo = [] :: list(),
