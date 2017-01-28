@@ -3,9 +3,14 @@
 -endif.
 
 -define(TERMINAL_PORT_DEFAULT, 5678).
--define(DISPLAY_PORT, 8765).
 
--define(SERVER_ADDR_DEFAULT, "localhost").
+-ifndef(WORKER_PORT).
+-define(WORKER_PORT, 5678).
+-endif.
+
+-ifndef(DISPLAY_PORT).
+-define(DISPLAY_PORT, 8765).
+-endif.
 
 -define(WORKER_LISTEN_OPTIONS, [
                                   binary,
