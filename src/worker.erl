@@ -8,8 +8,8 @@
 -spec spawn(socket(),jm_state()) -> thread() | error.
 spawn(Socket,JobsManagerSettings) ->
   % WorkerBoss = #thread{pid = self(),ref = make_ref()},
-  InboxThread = inbox_spawn(),
-  OutboxThread = outbox_spawn(),
+  InboxThread = worker_inbox:spawn(),
+  OutboxThread = worker_outbox:spawn(),
   TheWorkerRef = make_ref(),
   TheWorkerPid = spawn(fun() -> run(TheWorkerRef,JobsManagerSettings,InboxThread,OutboxThread, Socket) end),
   Ref = make_ref(),
@@ -62,71 +62,6 @@ worker_loop(Worker) ->
     {Sender, MsgRef, getworker} ->
       Sender ! {MsgRef,{worker,Worker}},
       worker_loop(Worker)
-  end.
-
--spec inbox_spawn() -> thread().
-inbox_spawn() ->
-  Ref = make_ref(), 
-  PID = spawn(fun() -> inbox() end),
-  #thread{pid = PID, ref = Ref}.
-
--spec inbox() -> any().
-inbox() ->
-  receive
-    {worker, Worker} ->
-      ?DBGF("~p Worker inbox is going to loop\n",[Worker#worker.head#thread.ref]),
-      inbox_loop(Worker)
-  end.
-
--spec inbox_loop(worker()) -> any().
-inbox_loop(Worker) ->
-  ?DBGF("~p inbox_loop\n",[Worker#worker.head#thread.ref]),
-  receive
-    die ->
-      ?DBGF("~p Worker inbox is shutting down\n",[Worker#worker.head#thread.ref]),
-      ok
-  after
-    0 ->
-      case gen_tcp:recv(Worker#worker.socket, 0) of
-        {ok, Data} ->
-          Worker#worker.head#thread.pid ! {inbox,Worker#worker.inbox#thread.ref,packet:bin_decode(Data)},
-          inbox_loop(Worker);
-        {error, Reason} ->
-          Worker#worker.head#thread.pid ! {inbox,Worker#worker.inbox#thread.ref,{error, Reason}},
-          inbox_loop(Worker)
-      end
-  end.
-
--spec outbox_spawn() -> thread().
-outbox_spawn() ->
-  Ref = make_ref(),
-  PID = spawn(fun() -> outbox() end),
-  #thread{pid = PID, ref = Ref}.
-  
--spec outbox() -> any().
-outbox() ->
-  receive
-    die -> ok; % unsafe
-    {worker, Worker} ->
-      ?DBGF("~p Worker outbox is going to loop\n",[Worker#worker.head#thread.ref]),
-      outbox_loop(Worker)
-  end.
-
--spec outbox_loop(worker()) -> any().
-outbox_loop(Worker) ->
-  HeadRef = Worker#worker.head#thread.ref,
-  receive
-    die -> 
-      ?DBGF("~p Worker outbox is shutting down\n",[Worker#worker.head#thread.ref]),
-      ok; % unsafe
-    {HeadRef, MsgRef, send, Packet} ->
-      case gen_tcp:send(Worker#worker.socket,packet:bin_encode(Packet)) of
-        ok ->
-          Worker#worker.head#thread.pid ! {outbox,Worker#worker.inbox#thread.ref,MsgRef,ok};
-        {error, Reason} ->
-          Worker#worker.head#thread.pid ! {outbox,Worker#worker.inbox#thread.ref, MsgRef,{error, Reason}}
-      end,
-      outbox_loop(Worker)
   end.
 
 -spec kill(worker()) -> ok | error.
